@@ -35,6 +35,10 @@
 </div>
 
 <script>
+if (!window.db) {
+  document.body.innerHTML = `<div class="app"><div class="panel"><h2>Firebase belum dikonfigurasi</h2><p>Isi <b>firebase-config.js</b> dengan konfigurasi Web App Firebase Anda, lalu unggah ulang ke GitHub Pages.</p><p>Pastikan <b>Realtime Database</b> juga sudah dibuat.</p></div></div>`;
+  throw new Error("Firebase configuration belum diisi.");
+}
 const room=db.ref("lcc/current");
 let myNumber=null;
 
@@ -71,15 +75,23 @@ function render(s){
 
 room.on("value",snap=>{
   render(snap.val());
-  document.getElementById("connection").textContent="● Terhubung";
+  document.getElementById("connection").textContent="● Firebase terhubung";
+}, err=>{
+  document.getElementById("connection").textContent="✕ Firebase gagal: "+err.message;
 });
 
 document.getElementById("buzz").onclick=async()=>{
   if(!myNumber)return;
-  const result=await room.transaction(current=>{
+  let result;
+  try {
+    result=await room.transaction(current=>{
     if(!current||current.status!=="armed"||current.winner!==null)return;
     return {status:"locked",winner:myNumber,winnerTime:firebase.database.ServerValue.TIMESTAMP};
-  });
+    });
+  } catch(e) {
+    document.getElementById("connection").textContent="✕ Gagal menekan bell: "+e.message;
+    return;
+  }
   // Jika committed=false, peserta kalah/ronde sudah terkunci.
   if(!result.committed)render(result.snapshot.val());
 };
