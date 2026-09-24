@@ -146,9 +146,11 @@ buzz.onclick=async()=>{
   }
   buzz.disabled=true;
   show("⏳ Memproses...");
+  const clickedRoundId = lastState.roundId || null;
   try{
     const result=await room.transaction(current=>{
       if(!current || current.status!=="armed")return;
+      if(!clickedRoundId || current.roundId!==clickedRoundId)return;
       if(current.winner!==null && current.winner!==undefined)return;
       return {
         ...current,
@@ -162,7 +164,10 @@ buzz.onclick=async()=>{
       warning.className="warning win";
       warning.innerHTML="🏆 ANDA SUDAH MENEKAN!<br>⚠️ Jangan tekan lagi.<br>Tunggu juri melakukan RESET SOAL.";
     }else{
-      show("Soal sudah terkunci.","red");
+      buzz.disabled=false;
+      show("Tekanan ditolak: soal terkunci atau ronde sudah berubah.","red");
+      warning.className="warning win";
+      warning.innerHTML="⚠️ TEKANAN DITOLAK!<br>Ronde sudah berubah atau soal sudah terkunci.";
     }
   }catch(e){
     buzz.disabled=false;
