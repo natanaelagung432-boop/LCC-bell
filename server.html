@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LCC Bell — Server</title><link rel="stylesheet" href="style.css">
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-database-compat.js"></script>
+<script src="firebase-config.js"></script>
+</head>
+<body>
+<div class="app">
+  <div class="top">
+    <div><h1>🔔 LCC BELL</h1><div class="sub">SERVER / JURI</div></div>
+    <a class="back" href="index.html">← Menu</a>
+  </div>
+
+  <div id="status" class="status">MENGHUBUNGKAN...</div>
+
+  <div class="panel">
+    <div class="controls">
+      <button id="arm" class="btn arm">SIAPKAN BELL</button>
+      <button id="reset" class="btn reset">RESET SOAL</button>
+    </div>
+    <div id="winner" class="message"></div>
+    <div id="connection" class="connection">Menghubungkan Firebase...</div>
+  </div>
+
+  <div class="panel">
+    <h2>Peserta</h2>
+    <div id="players" class="players"></div>
+  </div>
+</div>
+
+<script>
+const room=db.ref("lcc/current");
+const defaultState={status:"waiting",winner:null,winnerTime:null};
+let lastWinner=null;
+let audioCtx=null;
+
+function unlockAudio(){
+  try{
+    const C=window.AudioContext||window.webkitAudioContext;
+    if(C){
+      audioCtx=audioCtx||new C();
+      if(audioCtx.state==="suspended") audioCtx.resume();
+    }
+  }catch(e){}
+}
+
+function bell(){
+  try{
+    const C=window.AudioContext||window.webkitAudioContext;
+    if(!C)return;
+    audioCtx=audioCtx||new C();
+    if(audioCtx.state==="suspended")audioCtx.resume();
+    const now=audioCtx.currentTime;
+    const gain=audioCtx.createGain(),o1=audioCtx.createOscillator(),o2=audioCtx.createOscillator();
+    o1.type="sine";o2.type="sine";
+    o1.frequency.setValueAtTime(880,now);o2.frequency.setValueAtTime(660,now);
+    gain.gain.setValueAtTime(.001,now);
+    gain.gain.exponentialRampToValueAtTime(.7,now+.01);
+    gain.gain.exponentialRampToValueAtTime(.001,now+.65);
+    o1.connect(gain);o2.connect(gain);gain.connect(audioCtx.destination);
+    o1.start(now);o2.start(now);o1.stop(now+.7);o2.stop(now+.7);
+  }catch(e){}
+}
+
+function render(raw){
+  const s=Object.assign({},defaultState,raw||{});
+  const st=document.getElementById("status");
+  if(s.status==="armed"){st.textContent="🟢 BELL AKTIF — TUNGGU TEKANAN";st.className="status armed"}
+  else if(s.status==="locked"){st.textContent="🔔 TERKUNCI — PESERTA "+s.winner+" MENANG";st.className="status locked"}
+  else{st.textContent="MENUNGGU — tekan SIAPKAN BELL";st.className="status"}
+
+  document.getElementById("winner").textContent=s.winner?"🏆 PEMENANG: PESERTA "+s.winner:"";
+
+  const grid=document.getElementById("players");grid.innerHTML="";
+  for(let i=1;i<=12;i++){
+    const e=document.createElement("div");
+    e.className="player"+(s.winner===i?" winner":"");
+    e.innerHTML="<div>"+i+"</div><small>"+(s.winner===i?"🏆 PEMENANG":"PESERTA")+"</small>";
+    grid.appendChild(e);
+  }
+
+  if(s.winner && s.winner!==lastWinner){bell();lastWinner=s.winner}
+  if(!s.winner)lastWinner=null;
+}
+
+room.on("value",snap=>render(snap.val()));
+room.on("value",()=>document.getElementById("connection").textContent="● Firebase terhubung");
+room.on("value",null);
+
+document.getElementById("arm").onclick=async()=>{
+  unlockAudio();
+  await room.set({status:"armed",winner:null,winnerTime:null});
+};
+document.getElementById("reset").onclick=async()=>{
+  unlockAudio();
+  await room.set({status:"waiting",winner:null,winnerTime:null});
+};
+
+render(defaultState);
+</script>
+</body>
+</html>

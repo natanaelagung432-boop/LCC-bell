@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LCC Bell — Peserta</title><link rel="stylesheet" href="style.css">
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-database-compat.js"></script>
+<script src="firebase-config.js"></script>
+</head>
+<body>
+<div class="app">
+  <div class="top">
+    <div><h1>🔔 LCC BELL</h1><div class="sub">PESERTA</div></div>
+    <a class="back" href="index.html">← Menu</a>
+  </div>
+
+  <section id="choose" class="panel form">
+    <h2>Pilih Nomor Peserta</h2>
+    <p class="note">Pilih sesuai nomor yang diberikan panitia.</p>
+    <select id="number">
+      <option value="">— pilih nomor —</option>
+      <option>1</option><option>2</option><option>3</option><option>4</option>
+      <option>5</option><option>6</option><option>7</option><option>8</option>
+      <option>9</option><option>10</option><option>11</option><option>12</option>
+    </select>
+    <button id="join" class="btn arm full">MASUK</button>
+  </section>
+
+  <section id="game" class="panel buzz-wrap" style="display:none">
+    <div id="myNumber" class="my-number"></div>
+    <div id="msg" class="message">MENUNGGU...</div>
+    <button id="buzz" class="buzz" disabled>🔔<br>TEKAN</button>
+    <div id="connection" class="connection">Menghubungkan...</div>
+  </section>
+</div>
+
+<script>
+const room=db.ref("lcc/current");
+let myNumber=null;
+
+const saved=localStorage.getItem("lccPlayer");
+if(saved)setPlayer(Number(saved));
+
+document.getElementById("join").onclick=()=>{
+  const n=Number(document.getElementById("number").value);
+  if(!n)return;
+  localStorage.setItem("lccPlayer",n);
+  setPlayer(n);
+};
+
+function setPlayer(n){
+  if(!Number.isInteger(n)||n<1||n>12)return;
+  myNumber=n;
+  document.getElementById("choose").style.display="none";
+  document.getElementById("game").style.display="block";
+  document.getElementById("myNumber").textContent="PESERTA "+n;
+}
+
+function msg(t,c=""){const e=document.getElementById("msg");e.textContent=t;e.className="message "+c}
+
+function render(s){
+  const b=document.getElementById("buzz");
+  s=s||{status:"waiting",winner:null};
+  if(s.status==="armed"){b.disabled=false;msg("🟢 BELL AKTIF — TEKAN!")}
+  else if(s.status==="locked"){
+    b.disabled=true;
+    if(s.winner===myNumber)msg("🏆 ANDA MENANG!","green");
+    else msg("🔴 TERKUNCI — PESERTA "+s.winner+" MENANG","red");
+  }else{b.disabled=true;msg("MENUNGGU JURI MENYIAPKAN BELL","yellow")}
+}
+
+room.on("value",snap=>{
+  render(snap.val());
+  document.getElementById("connection").textContent="● Terhubung";
+});
+
+document.getElementById("buzz").onclick=async()=>{
+  if(!myNumber)return;
+  const result=await room.transaction(current=>{
+    if(!current||current.status!=="armed"||current.winner!==null)return;
+    return {status:"locked",winner:myNumber,winnerTime:firebase.database.ServerValue.TIMESTAMP};
+  });
+  // Jika committed=false, peserta kalah/ronde sudah terkunci.
+  if(!result.committed)render(result.snapshot.val());
+};
+
+render({status:"waiting",winner:null});
+</script>
+</body>
+</html>
