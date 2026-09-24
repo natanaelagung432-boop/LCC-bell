@@ -116,18 +116,55 @@ function bell(){
     if(!C)return;
     audioCtx=audioCtx||new C();
     if(audioCtx.state==="suspended") audioCtx.resume();
+
     const now=audioCtx.currentTime;
-    const osc=audioCtx.createOscillator();
-    const gain=audioCtx.createGain();
-    osc.type="sine";
-    osc.frequency.setValueAtTime(1150,now);
-    osc.frequency.exponentialRampToValueAtTime(900,now+.45);
-    gain.gain.setValueAtTime(.001,now);
-    gain.gain.exponentialRampToValueAtTime(.9,now+.015);
-    gain.gain.exponentialRampToValueAtTime(.001,now+.65);
-    osc.connect(gain); gain.connect(audioCtx.destination);
-    osc.start(now); osc.stop(now+.7);
-  }catch(e){console.log(e)}
+    const duration=3.0;
+
+    // Bel sekolah panjang: satu "TRIIING" sekitar 3 detik.
+    // Beberapa harmonik membuat suaranya lebih penuh dan metalik.
+    const tones=[
+      {freq:1150, gain:.72},
+      {freq:2300, gain:.22},
+      {freq:3450, gain:.10}
+    ];
+
+    tones.forEach(t=>{
+      const osc=audioCtx.createOscillator();
+      const gain=audioCtx.createGain();
+
+      osc.type="sine";
+      osc.frequency.setValueAtTime(t.freq,now);
+      osc.frequency.exponentialRampToValueAtTime(
+        t.freq*.88,
+        now+duration
+      );
+
+      gain.gain.setValueAtTime(.001,now);
+      gain.gain.exponentialRampToValueAtTime(
+        t.gain,
+        now+.025
+      );
+
+      // Bunyi tetap kuat beberapa saat, lalu menghilang perlahan.
+      gain.gain.setValueAtTime(
+        t.gain*.92,
+        now+1.1
+      );
+      gain.gain.exponentialRampToValueAtTime(
+        .001,
+        now+duration
+      );
+
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      osc.start(now);
+      osc.stop(now+duration+.05);
+    });
+
+  }catch(e){
+    console.log(e);
+  }
 }
 
 function render(s){
