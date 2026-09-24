@@ -32,6 +32,10 @@
 </div>
 
 <script>
+if (!window.db) {
+  document.body.innerHTML = `<div class="app"><div class="panel"><h2>Firebase belum dikonfigurasi</h2><p>Isi <b>firebase-config.js</b> dengan konfigurasi Web App Firebase Anda, lalu unggah ulang ke GitHub Pages.</p><p>Pastikan <b>Realtime Database</b> juga sudah dibuat.</p></div></div>`;
+  throw new Error("Firebase configuration belum diisi.");
+}
 const room=db.ref("lcc/current");
 const defaultState={status:"waiting",winner:null,winnerTime:null};
 let lastWinner=null;
@@ -86,17 +90,22 @@ function render(raw){
   if(!s.winner)lastWinner=null;
 }
 
-room.on("value",snap=>render(snap.val()));
-room.on("value",()=>document.getElementById("connection").textContent="● Firebase terhubung");
-room.on("value",null);
+room.on("value",snap=>{
+  render(snap.val());
+  document.getElementById("connection").textContent="● Firebase terhubung";
+}, err=>{
+  document.getElementById("connection").textContent="✕ Firebase gagal: "+err.message;
+});
 
 document.getElementById("arm").onclick=async()=>{
   unlockAudio();
-  await room.set({status:"armed",winner:null,winnerTime:null});
+  try { await room.set({status:"armed",winner:null,winnerTime:null}); }
+  catch(e){ document.getElementById("connection").textContent="✕ Gagal menyimpan: "+e.message; }
 };
 document.getElementById("reset").onclick=async()=>{
   unlockAudio();
-  await room.set({status:"waiting",winner:null,winnerTime:null});
+  try { await room.set({status:"waiting",winner:null,winnerTime:null}); }
+  catch(e){ document.getElementById("connection").textContent="✕ Gagal menyimpan: "+e.message; }
 };
 
 render(defaultState);
