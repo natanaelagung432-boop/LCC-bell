@@ -1,5 +1,5 @@
 const firebaseConfig = {
-  apiKey: "API_KEY_KAMU",
+  apiKey: "AIzaSyCO9Md77iT-VGfDNU3c1Nv_-X5xztRPYMc",
   authDomain: "lcc-bell-bruderan.firebaseapp.com",
   databaseURL: "https://lcc-bell-bruderan-default-rtdb.asia-southeast1.firebasedatabase.app",
   projectId: "lcc-bell-bruderan",
