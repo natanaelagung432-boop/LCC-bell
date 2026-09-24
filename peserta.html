@@ -1,592 +1,157 @@
 <!doctype html>
 <html lang="id">
 <head>
-
 <meta charset="utf-8">
-
-<meta
-  name="viewport"
-  content="width=device-width,initial-scale=1"
->
-
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>LCC Bell — Peserta</title>
-
-<link rel="stylesheet" href="style.css">
-
-<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
-
-<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-database-compat.js"></script>
-
-<script src="firebase-config.js"></script>
-
+<style>
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:#0b1424;color:#f8fafc;font-family:Arial,sans-serif;display:flex;align-items:center;justify-content:center}
+.wrap{width:min(600px,94%);text-align:center}
+.brand{font-size:34px;font-weight:900}.sub{color:#94a3b8;margin:5px 0 24px}
+.card{background:#111d31;border-radius:24px;padding:28px;box-shadow:0 20px 60px rgba(0,0,0,.25)}
+.number{font-size:56px;font-weight:900;margin:8px 0}
+.status{font-size:22px;font-weight:900;padding:18px;border-radius:16px;background:#334155;margin:18px 0}
+.status.armed{background:#14532d}.status.locked{background:#7f1d1d}
+#buzz{width:100%;height:180px;border-radius:28px;border:0;background:#16a34a;color:white;font-size:42px;font-weight:1000;cursor:pointer;box-shadow:0 10px 0 #166534}
+#buzz:active{transform:translateY(6px);box-shadow:0 4px 0 #166534}
+#buzz:disabled{background:#475569;box-shadow:none;cursor:not-allowed;transform:none}
+.warning{margin-top:18px;padding:15px;border-radius:14px;background:#fff3cd;color:#856404;font-weight:800;line-height:1.5}
+.warning.win{background:#dc2626;color:white}
+.note{color:#94a3b8;font-size:14px;line-height:1.5;margin-top:18px}
+#message{font-size:20px;font-weight:900;min-height:30px;margin-top:16px}
+</style>
 </head>
-
-
 <body>
-
-<div class="app">
-
-  <!-- HEADER -->
-
-  <div class="top">
-
-    <div>
-
-      <h1>🔔 LCC BELL</h1>
-
-      <div class="sub">
-        PESERTA
-      </div>
-
+<div class="wrap">
+  <div class="brand">🔔 LCC BELL</div>
+  <div class="sub">PESERTA</div>
+  <div class="card">
+    <div id="identity">Memeriksa QR...</div>
+    <div id="statusBox" class="status">MEMERIKSA...</div>
+    <button id="buzz" disabled>TEKAN</button>
+    <div id="spamWarning" class="warning">
+      ⚠️ Tekan hanya satu kali.<br>
+      Sistem menerima tekanan pertama.
     </div>
-
-    <a
-      class="back"
-      href="index.html"
-    >
-      ← Menu
-    </a>
-
+    <div id="message"></div>
+    <div class="note">Jangan menekan berulang kali. Setelah ada pemenang, tunggu juri melakukan RESET SOAL.</div>
   </div>
-
-
-  <!-- ERROR -->
-
-  <section
-    id="errorPanel"
-    class="panel"
-    style="display:none"
-  >
-
-    <h2>⚠️ QR Tidak Valid</h2>
-
-    <p id="errorMessage">
-      QR peserta tidak ditemukan.
-    </p>
-
-  </section>
-
-
-  <!-- GAME -->
-
-  <section
-    id="game"
-    class="panel buzz-wrap"
-    style="display:none"
-  >
-
-    <div
-      id="myNumber"
-      class="my-number"
-    ></div>
-
-
-    <div
-      id="msg"
-      class="message"
-    >
-      Menghubungkan...
-    </div>
-
-
-    <!-- TOMBOL BUZZ -->
-
-    <button
-      id="buzz"
-      class="buzz"
-      disabled
-      style="
-        width:min(80vw,350px);
-        height:min(80vw,350px);
-        max-height:350px;
-        border-radius:50%;
-        font-size:32px;
-        font-weight:bold;
-        cursor:pointer;
-        margin:25px auto;
-        display:block;
-      "
-    >
-
-      🔔
-      <br>
-
-      TEKAN
-
-    </button>
-
-
-    <div
-      id="connection"
-      class="connection"
-    >
-      Menghubungkan Firebase...
-    </div>
-
-  </section>
-
 </div>
 
-
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-database-compat.js"></script>
+<script src="firebase-config.js"></script>
 <script>
+const room=window.db.ref("lcc/current");
+const params=new URLSearchParams(location.search);
+const token=params.get("token");
+const buzz=document.getElementById("buzz");
+const statusBox=document.getElementById("statusBox");
+const identity=document.getElementById("identity");
+const warning=document.getElementById("spamWarning");
+const message=document.getElementById("message");
+let myNumber=null;
+let valid=false;
+let lastState=null;
 
-/* =========================================================
-   CEK FIREBASE
-========================================================= */
-
-if (!window.db) {
-
-  showError(
-    "Firebase belum dikonfigurasi. Periksa firebase-config.js."
-  );
-
-  throw new Error(
-    "Firebase configuration belum diisi."
-  );
-
+function show(msg,type=""){
+  message.textContent=msg;
+  message.style.color=type==="green"?"#4ade80":type==="red"?"#f87171":"#f8fafc";
 }
 
-
-/* =========================================================
-   DATABASE
-========================================================= */
-
-const room =
-  db.ref("lcc/current");
-
-
-/* =========================================================
-   TOKEN DARI QR
-========================================================= */
-
-const params =
-  new URLSearchParams(
-    window.location.search
-  );
-
-
-const token =
-  params.get("token");
-
-
-/* =========================================================
-   ELEMENT
-========================================================= */
-
-const game =
-  document.getElementById("game");
-
-const errorPanel =
-  document.getElementById("errorPanel");
-
-const myNumber =
-  document.getElementById("myNumber");
-
-const buzz =
-  document.getElementById("buzz");
-
-const connection =
-  document.getElementById("connection");
-
-
-/* =========================================================
-   ERROR
-========================================================= */
-
-function showError(message) {
-
-  document.getElementById(
-    "errorMessage"
-  ).textContent = message;
-
-  document.getElementById(
-    "errorPanel"
-  ).style.display = "block";
-
-}
-
-
-/* =========================================================
-   PESAN
-========================================================= */
-
-function msg(
-  text,
-  type = ""
-) {
-
-  const e =
-    document.getElementById("msg");
-
-  e.textContent = text;
-
-  e.className =
-    "message " + type;
-
-}
-
-
-/* =========================================================
-   CEK TOKEN
-========================================================= */
-
-if (!token) {
-
-  showError(
-    "Silakan scan QR peserta yang diberikan oleh server/juri."
-  );
-
-}
-
-
-/* =========================================================
-   LOAD IDENTITAS PESERTA
-========================================================= */
-
-async function loadPlayer() {
-
-  if (!token) return;
-
-  try {
-
-    const snap =
-      await room
-        .child("players")
-        .child(token)
-        .once("value");
-
-
-    const player =
-      snap.val();
-
-
-    if (
-      !player ||
-      !player.number
-    ) {
-
-      showError(
-        "QR ini tidak terdaftar atau sudah tidak berlaku."
-      );
-
-      return;
-
-    }
-
-
-    /* -------------------------
-       TAMPILKAN GAME
-    ------------------------- */
-
-    game.style.display =
-      "block";
-
-
-    myNumber.textContent =
-      "PESERTA " +
-      player.number;
-
-
-    /* Simpan nomor secara internal */
-
-    window.myPlayerNumber =
-      Number(player.number);
-
-
-    /* Mulai listener room */
-
-    startRoomListener();
-
-
-  }
-
-  catch (e) {
-
-    showError(
-      "Gagal membaca data peserta: " +
-      e.message
-    );
-
-  }
-
-}
-
-
-/* =========================================================
-   STATUS GAME
-========================================================= */
-
-function render(raw) {
-
-  const s =
-    raw || {
-      status: "waiting",
-      winner: null
-    };
-
-
-  /* -------------------------
-     BELL AKTIF
-  ------------------------- */
-
-  if (
-    s.status === "armed"
-  ) {
-
-    buzz.disabled =
-      false;
-
-    buzz.style.opacity =
-      "1";
-
-    buzz.style.cursor =
-      "pointer";
-
-    msg(
-      "🟢 BELL AKTIF — TEKAN!",
-      "green"
-    );
-
+async function validate(){
+  if(!token){
+    identity.textContent="❌ QR tidak valid";
+    show("Buka halaman melalui QR dari server.","red");
     return;
-
   }
-
-
-  /* -------------------------
-     TERKUNCI
-  ------------------------- */
-
-  if (
-    s.status === "locked"
-  ) {
-
-    buzz.disabled =
-      true;
-
-    buzz.style.opacity =
-      ".5";
-
-    buzz.style.cursor =
-      "not-allowed";
-
-
-    if (
-      Number(s.winner) ===
-      Number(window.myPlayerNumber)
-    ) {
-
-      msg(
-        "🏆 ANDA MENANG!",
-        "green"
-      );
-
-    }
-
-    else {
-
-      msg(
-        "🔴 TERKUNCI — PESERTA " +
-        s.winner +
-        " MENEKAN TERLEBIH DAHULU",
-        "red"
-      );
-
-    }
-
-    return;
-
-  }
-
-
-  /* -------------------------
-     MENUNGGU
-  ------------------------- */
-
-  buzz.disabled =
-    true;
-
-  buzz.style.opacity =
-    ".5";
-
-  buzz.style.cursor =
-    "not-allowed";
-
-  msg(
-    "MENUNGGU JURI MENYIAPKAN BELL",
-    "yellow"
-  );
-
-}
-
-
-/* =========================================================
-   LISTENER REALTIME
-========================================================= */
-
-function startRoomListener() {
-
-  room.on(
-
-    "value",
-
-    snap => {
-
-      render(
-        snap.val()
-      );
-
-      connection.textContent =
-        "● Firebase terhubung";
-
-    },
-
-    err => {
-
-      connection.textContent =
-        "✕ Firebase gagal: " +
-        err.message;
-
-    }
-
-  );
-
-}
-
-
-/* =========================================================
-   BUZZ
-========================================================= */
-
-buzz.onclick =
-  async () => {
-
-    if (
-      !window.myPlayerNumber
-    ) {
+  try{
+    const snap=await room.child("players").child(token).get();
+    if(!snap.exists()){
+      identity.textContent="❌ QR tidak terdaftar";
+      show("Minta juri membuat QR baru.","red");
       return;
     }
+    myNumber=snap.val().number;
+    valid=true;
+    identity.innerHTML="<div class='number'>PESERTA "+myNumber+"</div>";
+    listen();
+  }catch(e){
+    identity.textContent="❌ Gagal terhubung";
+    show(e.message,"red");
+  }
+}
 
+function render(s){
+  if(!valid)return;
+  s=s||{};
+  lastState=s;
+  const status=s.status||"waiting";
+  statusBox.className="status "+status;
+  statusBox.textContent=
+    status==="armed"?"🟢 BELL AKTIF — TEKAN SEKALI":
+    status==="locked"?"🔴 SOAL TERKUNCI":"⏳ MENUNGGU JURI";
+  buzz.disabled=status!=="armed";
 
-    /* Cegah double click */
+  if(status==="waiting"){
+    show("Menunggu juri menyiapkan bell.");
+    warning.className="warning";
+    warning.innerHTML="⚠️ Tekan hanya satu kali.<br>Sistem menerima tekanan pertama.";
+  }
 
-    buzz.disabled =
-      true;
+  if(status==="armed"){
+    show("Silakan tekan satu kali.");
+    warning.className="warning";
+    warning.innerHTML="⚠️ Tekan hanya satu kali.<br>Sistem menerima tekanan pertama.";
+  }
 
-
-    try {
-
-      const result =
-        await room.transaction(
-          current => {
-
-            /* Tidak ada data */
-
-            if (!current) {
-              return;
-            }
-
-
-            /* Bell belum aktif */
-
-            if (
-              current.status !==
-              "armed"
-            ) {
-
-              return;
-
-            }
-
-
-            /* Sudah ada pemenang */
-
-            if (
-              current.winner !==
-              null &&
-              current.winner !==
-              undefined
-            ) {
-
-              return;
-
-            }
-
-
-            /*
-             * PESERTA INI MENJADI
-             * PEMENANG PERTAMA
-             */
-
-            return {
-
-              ...current,
-
-              status: "locked",
-
-              winner:
-                window.myPlayerNumber,
-
-              winnerTime:
-                firebase.database
-                  .ServerValue
-                  .TIMESTAMP
-
-            };
-
-          }
-        );
-
-
-      /* -------------------------
-         TRANSAKSI BERHASIL
-      ------------------------- */
-
-      if (
-        result.committed
-      ) {
-
-        msg(
-          "🏆 ANDA MENANG!",
-          "green"
-        );
-
-      }
-
-      else {
-
-        /*
-         * Orang lain lebih dulu
-         */
-
-        render(
-          result.snapshot.val()
-        );
-
-      }
-
+  if(status==="locked"){
+    buzz.disabled=true;
+    if(Number(s.winner)===Number(myNumber)){
+      show("🏆 ANDA MENANG!","green");
+      warning.className="warning win";
+      warning.innerHTML="🏆 ANDA SUDAH MENEKAN!<br>⚠️ Jangan tekan lagi.<br>Tunggu juri melakukan RESET SOAL.";
+    }else{
+      show("Peserta "+s.winner+" menekan lebih dahulu.","red");
+      warning.className="warning win";
+      warning.innerHTML="🔴 SOAL SUDAH TERKUNCI.<br>Peserta "+s.winner+" menekan lebih dahulu.<br>Tunggu juri melakukan RESET SOAL.";
     }
+  }
+}
 
-    catch (e) {
-
-      buzz.disabled =
-        false;
-
-      connection.textContent =
-        "✕ Gagal menekan bell: " +
-        e.message;
-
+buzz.onclick=async()=>{
+  if(!valid || !lastState || lastState.status!=="armed")return;
+  buzz.disabled=true;
+  show("⏳ Memproses...");
+  try{
+    const result=await room.transaction(current=>{
+      if(!current || current.status!=="armed")return;
+      if(current.winner!==null && current.winner!==undefined)return;
+      return {
+        ...current,
+        status:"locked",
+        winner:myNumber,
+        winnerTime:firebase.database.ServerValue.TIMESTAMP
+      };
+    });
+    if(result.committed){
+      show("🏆 ANDA MENANG!","green");
+      warning.className="warning win";
+      warning.innerHTML="🏆 ANDA SUDAH MENEKAN!<br>⚠️ Jangan tekan lagi.<br>Tunggu juri melakukan RESET SOAL.";
+    }else{
+      show("Soal sudah terkunci.","red");
     }
+  }catch(e){
+    buzz.disabled=false;
+    show("Gagal mengirim: "+e.message,"red");
+  }
+};
 
-  };
-
-
-/* =========================================================
-   MULAI
-========================================================= */
-
-loadPlayer();
-
+function listen(){
+  room.on("value",snap=>render(snap.val()));
+}
+validate();
 </script>
-
 </body>
 </html>
