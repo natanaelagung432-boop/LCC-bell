@@ -1,17 +1,38 @@
-// Isi dengan konfigurasi Firebase Web App Anda.
-// Firebase Console → Project settings → Your apps → Web app.
+// ============================================================
+// KONFIGURASI FIREBASE LCC BELL
+// ============================================================
+// 1. Buka Firebase Console: https://console.firebase.google.com/
+// 2. Buat project -> tambahkan Web App (</>)
+// 3. Project settings -> Your apps -> Config
+// 4. Salin konfigurasi firebaseConfig dari Firebase ke bawah.
+// 5. Aktifkan Realtime Database.
 //
-// Konfigurasi ini bukan password/private key. Jangan masukkan service account key.
+// JANGAN masukkan service-account private key di file ini.
+// apiKey Firebase Web boleh berada di kode client.
+// ============================================================
 
 const firebaseConfig = {
-  apiKey: "ISI_API_KEY",
-  authDomain: "ISI_PROJECT.firebaseapp.com",
-  databaseURL: "https://ISI_PROJECT-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "ISI_PROJECT",
-  storageBucket: "ISI_PROJECT.firebasestorage.app",
-  messagingSenderId: "ISI_SENDER_ID",
-  appId: "ISI_APP_ID"
+  apiKey: "TEMPEL_API_KEY_DI_SINI",
+  authDomain: "TEMPEL_PROJECT_ID.firebaseapp.com",
+  databaseURL: "https://TEMPEL_PROJECT_ID-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "TEMPEL_PROJECT_ID",
+  storageBucket: "TEMPEL_PROJECT_ID.firebasestorage.app",
+  messagingSenderId: "TEMPEL_SENDER_ID",
+  appId: "TEMPEL_APP_ID"
 };
 
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
+function firebaseConfigReady() {
+  return firebaseConfig.apiKey &&
+    !firebaseConfig.apiKey.includes("TEMPEL_") &&
+    firebaseConfig.projectId &&
+    !firebaseConfig.projectId.includes("TEMPEL_") &&
+    firebaseConfig.appId &&
+    !firebaseConfig.appId.includes("TEMPEL_");
+}
+
+if (!firebaseConfigReady()) {
+  console.warn("LCC Bell: konfigurasi Firebase belum diisi.");
+} else {
+  firebase.initializeApp(firebaseConfig);
+  window.db = firebase.database();
+}
