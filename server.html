@@ -70,6 +70,11 @@ input{width:100px;padding:14px;border-radius:12px;border:2px solid #475569;backg
   <div id="winner" class="winner"></div>
 </div>
 
+<div class="card" id="violationCard" style="display:none;border:3px solid #dc2626;background:#3b1118">
+  <h2>🚨 Peringatan Pelanggaran</h2>
+  <div id="violationText" style="font-size:26px;font-weight:900;line-height:1.35"></div>
+</div>
+
 <div class="card">
   <h2>Peserta & QR</h2>
   <div id="players" class="grid"></div>
@@ -81,11 +86,13 @@ input{width:100px;padding:14px;border-radius:12px;border:2px solid #475569;backg
 <script src="firebase-config.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <audio id="bellSound" src="school-bell.mp3" preload="auto"></audio>
+<audio id="warningSound" src="warning-alarm.mp3" preload="auto"></audio>
 <script>
 const room = window.db.ref("lcc/current");
 const $ = id => document.getElementById(id);
 let audioCtx = null;
 let lastWinner = null;
+let lastViolationKey = null;
 
 function createToken(){
   if(window.crypto && crypto.getRandomValues){
@@ -104,20 +111,18 @@ function participantUrl(token){
 
 function unlockAudio(){
   try{
-    const bellSound=document.getElementById("bellSound");
-    if(!bellSound)return;
-    bellSound.muted=true;
-    const p=bellSound.play();
-    if(p){
-      p.then(()=>{
-        bellSound.pause();
-        bellSound.currentTime=0;
-        bellSound.muted=false;
-      }).catch(()=>{});
-    }
+    const sounds=[document.getElementById("bellSound"),document.getElementById("warningSound")].filter(Boolean);
+    sounds.forEach(sound=>{
+      sound.muted=true;
+      const p=sound.play();
+      if(p){p.then(()=>{sound.pause();sound.currentTime=0;sound.muted=false;}).catch(()=>{});}
+    });
   }catch(e){}
 }
 
+function warningAlarm(){
+  try{ const sound=document.getElementById("warningSound"); if(!sound)return; sound.currentTime=0; sound.volume=1; const p=sound.play(); if(p)p.catch(e=>console.log(e)); }catch(e){console.log(e)}
+}
 function bell(){
   try{
     const bellSound=document.getElementById("bellSound");
@@ -129,6 +134,21 @@ function bell(){
   }catch(e){console.log(e)}
 }
 
+function renderViolation(v){
+  if(!v)return;
+  $("violationCard").style.display="block";
+  $("violationText").textContent="⚠️ PESERTA "+v.number+" melakukan pelanggaran — menekan tombol pada waktu yang tidak diperbolehkan.";
+}
+function watchViolations(){
+  room.child("violations").limitToLast(1).on("child_added",snap=>{
+    const v=snap.val(); if(!v)return;
+    if(lastViolationKey===snap.key)return;
+    lastViolationKey=snap.key;
+    renderViolation(v);
+    warningAlarm();
+    $("message").textContent="🚨 Pelanggaran: peserta "+v.number+" menekan tombol pada waktu yang tidak diperbolehkan.";
+  });
+}
 function render(s){
   s=s||{status:"waiting",winner:null,participantCount:0,players:{}};
   const status=s.status||"waiting";
@@ -208,7 +228,7 @@ $("reset").onclick=async()=>{
 };
 
 room.on("value",snap=>render(snap.val()));
-room.on("value",()=>{});
+watchViolations();
 </script>
 </body>
 </html>
