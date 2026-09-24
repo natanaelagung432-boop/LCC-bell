@@ -12,13 +12,13 @@
 // ============================================================
 
 const firebaseConfig = {
-  apiKey: "TEMPEL_API_KEY_DI_SINI",
-  authDomain: "TEMPEL_PROJECT_ID.firebaseapp.com",
-  databaseURL: "https://TEMPEL_PROJECT_ID-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "TEMPEL_PROJECT_ID",
-  storageBucket: "TEMPEL_PROJECT_ID.firebasestorage.app",
-  messagingSenderId: "TEMPEL_SENDER_ID",
-  appId: "TEMPEL_APP_ID"
+  apiKey: "AIzaSy...",
+  authDomain: "lcc-bell-bruderan.firebaseapp.com",
+  databaseURL: "https://lcc-bell-bruderan-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "lcc-bell-bruderan",
+  storageBucket: "lcc-bell-bruderan.firebasestorage.app",
+  messagingSenderId: "422541592078",
+  appId: "1:422541592078:web:b6f4cc74723b306c8a1e5f"
 };
 
 function firebaseConfigReady() {
