@@ -38,6 +38,7 @@ body{margin:0;min-height:100vh;background:#0b1424;color:#f8fafc;font-family:Aria
     <div class="note">Jangan menekan berulang kali. Setelah ada pemenang, tunggu juri melakukan RESET SOAL.</div>
   </div>
 </div>
+<audio id="warningSound" src="warning-alarm.mp3" preload="auto"></audio>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-database-compat.js"></script>
@@ -54,6 +55,15 @@ const message=document.getElementById("message");
 let myNumber=null;
 let valid=false;
 let lastState=null;
+const warningSound=document.getElementById("warningSound");
+function playWarning(){
+  try{ if(!warningSound)return; warningSound.pause(); warningSound.currentTime=0; warningSound.volume=1; const p=warningSound.play(); if(p)p.catch(()=>{}); }catch(e){console.log(e)}
+}
+async function reportViolation(){
+  if(!valid || !token || myNumber===null)return;
+  try{ await room.child("violations").push({number:myNumber,token:token,type:"early_or_late_press",time:firebase.database.ServerValue.TIMESTAMP}); }
+  catch(e){ console.log("Violation report failed:",e); }
+}
 
 function show(msg,type=""){
   message.textContent=msg;
@@ -92,15 +102,17 @@ function render(s){
   statusBox.textContent=
     status==="armed"?"🟢 BELL AKTIF — TEKAN SEKALI":
     status==="locked"?"🔴 SOAL TERKUNCI":"⏳ MENUNGGU JURI";
-  buzz.disabled=status!=="armed";
+  // Tetap bisa diklik saat menunggu agar pelanggaran dapat dideteksi.
+  buzz.disabled=false;
 
   if(status==="waiting"){
-    show("Menunggu juri menyiapkan bell.");
+    show("⏳ Menunggu juri menyiapkan bell.");
     warning.className="warning";
-    warning.innerHTML="⚠️ Tekan hanya satu kali.<br>Sistem menerima tekanan pertama.";
+    warning.innerHTML="⚠️ BELUM BOLEH MENEKAN!<br>Menekan sekarang akan tercatat sebagai pelanggaran.";
   }
 
   if(status==="armed"){
+    buzz.disabled=false;
     show("Silakan tekan satu kali.");
     warning.className="warning";
     warning.innerHTML="⚠️ Tekan hanya satu kali.<br>Sistem menerima tekanan pertama.";
@@ -121,7 +133,17 @@ function render(s){
 }
 
 buzz.onclick=async()=>{
-  if(!valid || !lastState || lastState.status!=="armed")return;
+  if(!valid || !lastState)return;
+  if(lastState.status!=="armed"){
+    playWarning();
+    show(lastState.status==="waiting" ? "⚠️ PELANGGARAN! Jangan menekan sebelum juri menyiapkan bell." : "⚠️ Soal sudah terkunci. Jangan menekan lagi.","red");
+    warning.className="warning win";
+    warning.innerHTML=lastState.status==="waiting"
+      ? "🚨 PELANGGARAN TERCATAT!<br>Jangan menekan tombol sebelum juri menyiapkan bell."
+      : "⚠️ JANGAN SPAM TOMBOL!<br>Soal sudah terkunci. Tunggu RESET SOAL.";
+    await reportViolation();
+    return;
+  }
   buzz.disabled=true;
   show("⏳ Memproses...");
   try{
