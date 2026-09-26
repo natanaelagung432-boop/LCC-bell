@@ -34,26 +34,7 @@ function render(s){
  $("winner").textContent=last.winner?"🏆 PESERTA "+last.winner+" MENANG":"";
  const key=(last.roundId||"")+"|"+(last.timerStartAt||"")+"|"+(last.timerDuration||0);if(key!==lastTimerKey){lastTimerKey=key;startTimer(last)}
 }
-function startTimer(s){clearInterval(timerLoop);$("timer").textContent="";if(!s.timerStartAt||!s.timerDuration||!s.winner)return;const end=Number(s.timerStartAt)+Number(s.timerDuration)*1000;let prev=-1;const tick=()=>{const left=Math.ceil((end-now())/1000);if(left>0){$("timer").textContent=left;if(left!==prev){prev=left;play("countSound")}}else{$("timer").textContent="0";if(prev!==0){prev=0;play("timesUpSound")}clearInterval(timerLoop)}};tick();timerLoop=setInterval(tick,100)}
-async function violation(expectedStatus){
- if(violationBusy)return;violationBusy=true;unlock();play("warningSound");
- try{
-   const result=await room.transaction(current=>{
-     if(!current?.players?.[token])return;
-     const p=current.players[token];if(p.banned)return;
-     if(current.status==="armed" && current.winner==null)return;
-     const count=(Number(p.violationCount)||0)+1,banned=count>=3;
-     return {...current,players:{...current.players,[token]:{...p,violationCount:count,banned}}};
-   });
-   if(result.committed){
-     const p=result.snapshot.val().players[token],count=p.violationCount,banned=!!p.banned;
-     await room.child("violations").push({number:myNumber,token,type:expectedStatus==="waiting"?"EARLY_PRESS":"LOCKED_PRESS",count,banned,roundId:result.snapshot.val().roundId||null,time:firebase.database.ServerValue.TIMESTAMP});
-     if(banned){play("timesUpSound");notice("🚫 BANNED!<br>3× pelanggaran pada soal ini. Tunggu RESET SOAL.",true);$("buzz").disabled=true}
-     else notice("⚠️ PELANGGARAN #"+count+" tercatat.<br>Jangan menekan lagi.",true);
-   }
- }catch(e){$("message").textContent="Gagal mencatat pelanggaran: "+e.message}
- violationBusy=false;
-}
+function startTimer(s){clearInterval(timerLoop);$("timer").textContent="";if(!s.timerStartAt||!s.timerDuration||!s.winner)return;const start=Number(s.timerStartAt),end=start+Number(s.timerDuration)*1000;let prev=-1,finished=false;const tick=()=>{const t=now();if(t<start){$("timer").textContent="⏳";return}const left=Math.ceil((end-t)/1000);if(left>0){$("timer").textContent=left;if(left!==prev){prev=left;play("countSound")}}else{$("timer").textContent="0";if(!finished){finished=true;play("timesUpSound")}clearInterval(timerLoop)}};tick();timerLoop=setInterval(tick,100)}
 $("buzz").onclick=async()=>{
  if(!valid||!last)return;unlock();
  const st=last.status||"waiting";const p=last.players?.[token]||{};if(p.banned)return;
@@ -64,7 +45,7 @@ $("buzz").onclick=async()=>{
   const r=await room.transaction(current=>{
    if(!current?.players?.[token])return;if(current.players[token].banned)return;
    if(current.status!=="armed"||current.winner!=null||current.roundId!==clickedRound)return;
-   return {...current,status:"locked",winner:myNumber,winnerTime:firebase.database.ServerValue.TIMESTAMP,timerStartAt:firebase.database.ServerValue.TIMESTAMP};
+   return {...current,status:"locked",winner:myNumber,winnerTime:firebase.database.ServerValue.TIMESTAMP,timerStartAt:now()+5000};
   });
   if(!r.committed){$("buzz").disabled=false;const c=r.snapshot.val()||{};if(c.status!=="armed"||c.winner!=null)await violation(c.status||"locked");else $("message").textContent="Ronde berubah. Tekanan ditolak."}
   else{$("message").textContent="🏆 ANDA MENANG!"}
