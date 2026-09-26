@@ -1,20 +1,188 @@
 <!doctype html>
 <html lang="id">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
 <title>LCC Bell — Lomba</title>
+
 <style>
-*{box-sizing:border-box}body{margin:0;background:#08111f;color:#f8fafc;font-family:Arial,sans-serif}.wrap{max-width:1000px;margin:auto;padding:22px}
-header{text-align:center;margin-bottom:18px}.brand{font-size:38px;font-weight:1000}.sub{color:#94a3b8}
-.status{border-radius:20px;padding:24px;text-align:center;font-size:27px;font-weight:1000;background:#334155}.status.armed{background:#14532d}.status.locked{background:#7f1d1d}
-.controls{display:grid;grid-template-columns:2fr 1fr;gap:14px;margin-top:16px}.mainbtn{min-height:150px;font-size:34px;border:0;border-radius:24px;font-weight:1000;cursor:pointer;background:#16a34a;color:white;box-shadow:0 10px 0 #166534}.reset{font-size:28px;background:#475569;color:#fff;border:0;border-radius:24px;font-weight:1000;cursor:pointer}.mainbtn:active,.reset:active{transform:translateY(3px)}button:disabled{opacity:.45;cursor:not-allowed}
-.card{background:#111d31;border-radius:22px;padding:22px;margin-top:16px}.setting{display:flex;gap:10px;flex-wrap:wrap}.timerbtn{padding:13px 18px;border:0;border-radius:12px;background:#334155;color:white;font-weight:900;cursor:pointer}.timerbtn.active{background:#2563eb}
-.timer{font-size:72px;font-weight:1000;text-align:center;margin:8px 0}.winner{text-align:center;font-size:32px;font-weight:1000}
-.log{max-height:320px;overflow:auto;display:flex;flex-direction:column-reverse;gap:8px}.item{padding:11px 13px;border-radius:11px;background:#1b2a43;font-weight:700}.danger{background:#3b1118}.ok{background:#12351f}.note{color:#94a3b8;font-size:13px;line-height:1.45}
-@media(max-width:700px){.controls{grid-template-columns:1fr}.mainbtn{min-height:120px}.brand{font-size:31px}.timer{font-size:58px}}
+*{box-sizing:border-box}
+
+body{
+  margin:0;
+  background:#08111f;
+  color:#f8fafc;
+  font-family:Arial,sans-serif
+}
+
+.wrap{
+  max-width:1000px;
+  margin:auto;
+  padding:22px
+}
+
+header{
+  text-align:center;
+  margin-bottom:18px
+}
+
+.brand{
+  font-size:38px;
+  font-weight:1000
+}
+
+.sub{
+  color:#94a3b8
+}
+
+.status{
+  border-radius:20px;
+  padding:24px;
+  text-align:center;
+  font-size:27px;
+  font-weight:1000;
+  background:#334155
+}
+
+.status.armed{
+  background:#14532d
+}
+
+.status.locked{
+  background:#7f1d1d
+}
+
+.controls{
+  display:grid;
+  grid-template-columns:2fr 1fr;
+  gap:14px;
+  margin-top:16px
+}
+
+.mainbtn{
+  min-height:150px;
+  font-size:34px;
+  border:0;
+  border-radius:24px;
+  font-weight:1000;
+  cursor:pointer;
+  background:#16a34a;
+  color:white;
+  box-shadow:0 10px 0 #166534
+}
+
+.reset{
+  font-size:28px;
+  background:#475569;
+  color:#fff;
+  border:0;
+  border-radius:24px;
+  font-weight:1000;
+  cursor:pointer
+}
+
+.mainbtn:active,
+.reset:active{
+  transform:translateY(3px)
+}
+
+button:disabled{
+  opacity:.45;
+  cursor:not-allowed
+}
+
+.card{
+  background:#111d31;
+  border-radius:22px;
+  padding:22px;
+  margin-top:16px
+}
+
+.setting{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap
+}
+
+.timerbtn{
+  padding:13px 18px;
+  border:0;
+  border-radius:12px;
+  background:#334155;
+  color:white;
+  font-weight:900;
+  cursor:pointer
+}
+
+.timerbtn.active{
+  background:#2563eb
+}
+
+.timer{
+  font-size:72px;
+  font-weight:1000;
+  text-align:center;
+  margin:8px 0
+}
+
+.winner{
+  text-align:center;
+  font-size:32px;
+  font-weight:1000
+}
+
+.log{
+  max-height:320px;
+  overflow:auto;
+  display:flex;
+  flex-direction:column-reverse;
+  gap:8px
+}
+
+.item{
+  padding:11px 13px;
+  border-radius:11px;
+  background:#1b2a43;
+  font-weight:700
+}
+
+.danger{
+  background:#3b1118
+}
+
+.ok{
+  background:#12351f
+}
+
+.note{
+  color:#94a3b8;
+  font-size:13px;
+  line-height:1.45
+}
+
+@media(max-width:700px){
+  .controls{
+    grid-template-columns:1fr
+  }
+
+  .mainbtn{
+    min-height:120px
+  }
+
+  .brand{
+    font-size:31px
+  }
+
+  .timer{
+    font-size:58px
+  }
+}
 </style>
 </head>
+
 <body>
+
 <div class="wrap">
 
 <header>
@@ -22,227 +190,479 @@ header{text-align:center;margin-bottom:18px}.brand{font-size:38px;font-weight:10
   <div class="sub">HALAMAN LOMBA / JURI</div>
 </header>
 
-<div id="status" class="status">⏳ MENUNGGU / SIAP RESET</div>
+<div id="status" class="status">
+  ⏳ MENUNGGU / SIAP RESET
+</div>
 
 <div class="controls">
+
   <button id="arm" class="mainbtn">
-    🔔 SIAPKAN BELL<br><small>ENTER</small>
+    🔔 SIAPKAN BELL<br>
+    <small>ENTER</small>
   </button>
 
   <button id="reset" class="reset">
-    🔄 RESET SOAL<br><small>R</small>
+    🔄 RESET SOAL<br>
+    <small>R</small>
   </button>
+
 </div>
 
 <div class="card">
+
   <h2>⏱ TIMER</h2>
 
   <div class="setting">
-    <button class="timerbtn active" data-sec="0">OFF</button>
-    <button class="timerbtn" data-sec="5">5 DETIK</button>
-    <button class="timerbtn" data-sec="10">10 DETIK</button>
+
+    <button
+      class="timerbtn active"
+      data-sec="0">
+      OFF
+    </button>
+
+    <button
+      class="timerbtn"
+      data-sec="5">
+      5 DETIK
+    </button>
+
+    <button
+      class="timerbtn"
+      data-sec="10">
+      10 DETIK
+    </button>
+
   </div>
 
-  <div id="timer" class="timer">—</div>
+  <div id="timer" class="timer">
+    —
+  </div>
+
   <div id="winner" class="winner"></div>
+
 </div>
 
 <div class="card">
+
   <h2>📢 NOTIFIKASI</h2>
+
   <div id="logs" class="log"></div>
+
 </div>
 
 <div class="card">
+
   <div class="note">
     ENTER = siapkan bell · R = reset soal.
     Shortcut aktif saat tidak sedang mengetik pada input/textarea/select.
   </div>
-</div>
 
 </div>
 
-<audio id="bellSound" src="school-bell.mp3" preload="auto"></audio>
-<audio id="warningSound" src="warning-alarm.mp3" preload="auto"></audio>
-<audio id="countSound" src="count.mp3" preload="auto"></audio>
-<audio id="timesUpSound" src="times-up.mp3" preload="auto"></audio>
+</div>
+
+<audio
+  id="bellSound"
+  src="school-bell.mp3"
+  preload="auto">
+</audio>
+
+<audio
+  id="warningSound"
+  src="warning-alarm.mp3"
+  preload="auto">
+</audio>
+
+<audio
+  id="countSound"
+  src="count.mp3"
+  preload="auto">
+</audio>
+
+<audio
+  id="timesUpSound"
+  src="times-up.mp3"
+  preload="auto">
+</audio>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-database-compat.js"></script>
 <script src="firebase-config.js"></script>
 
 <script>
-const room=window.db.ref("lcc/current"),
-      viol=window.db.ref("lcc/violations"),
-      $=id=>document.getElementById(id);
 
-let lastWinner=null,
-    lastViolation=null,
-    lastStatus=null,
-    lastTimerKey=null,
-    timerLoop=null,
-    serverOffset=0;
+const room =
+  window.db.ref("lcc/current");
 
-window.db.ref(".info/serverTimeOffset").on("value",s=>{
-  serverOffset=s.val()||0;
-});
+const viol =
+  window.db.ref("lcc/violations");
+
+const $ =
+  id => document.getElementById(id);
+
+let lastWinner = null;
+let lastViolation = null;
+let lastTimerKey = null;
+let timerLoop = null;
+let serverOffset = 0;
+
+
+/* =========================
+   SERVER TIME
+========================= */
+
+window.db
+  .ref(".info/serverTimeOffset")
+  .on("value",s=>{
+    serverOffset = s.val() || 0;
+  });
 
 function now(){
   return Date.now()+serverOffset;
 }
 
+
+/* =========================
+   ROUND ID
+========================= */
+
 function round(){
-  return "ROUND-"+Date.now().toString(36).toUpperCase()+"-"+Math.random().toString(36).slice(2,7).toUpperCase();
+
+  return "ROUND-" +
+    Date.now()
+      .toString(36)
+      .toUpperCase() +
+    "-" +
+    Math.random()
+      .toString(36)
+      .slice(2,7)
+      .toUpperCase();
 }
 
+
+/* =========================
+   AUDIO
+========================= */
+
 function play(id){
+
   try{
-    const a=$(id);
-    a.currentTime=0;
-    a.volume=1;
-    const p=a.play();
-    if(p)p.catch(()=>{});
+
+    const a = $(id);
+
+    a.currentTime = 0;
+    a.volume = 1;
+
+    const p = a.play();
+
+    if(p){
+      p.catch(()=>{});
+    }
+
   }catch(e){}
 }
 
+
+/*
+  Unlock audio browser.
+*/
+
 function unlock(){
-  ["bellSound","warningSound","countSound","timesUpSound"].forEach(id=>{
+
+  [
+    "bellSound",
+    "warningSound",
+    "countSound",
+    "timesUpSound"
+  ].forEach(id=>{
+
     try{
-      const a=$(id);
-      a.muted=true;
-      const p=a.play();
+
+      const a = $(id);
+
+      a.muted = true;
+
+      const p = a.play();
 
       p?.then(()=>{
+
         a.pause();
-        a.currentTime=0;
-        a.muted=false;
+        a.currentTime = 0;
+        a.muted = false;
+
       }).catch(()=>{});
+
     }catch(e){}
+
   });
 }
 
+
+/* =========================
+   LOG
+========================= */
+
 function log(t,cls=""){
-  const d=document.createElement("div");
-  d.className="item "+cls;
-  d.textContent=t;
+
+  const d =
+    document.createElement("div");
+
+  d.className =
+    "item "+cls;
+
+  d.textContent = t;
 
   $("logs").prepend(d);
 
-  while($("logs").children.length>80){
+  while(
+    $("logs").children.length > 80
+  ){
     $("logs").lastChild.remove();
   }
 }
 
+
+/* =========================
+   RENDER
+========================= */
+
 function render(s){
-  s=s||{};
 
-  const st=s.status||"waiting";
+  s = s || {};
 
-  $("status").className="status "+st;
+  const st =
+    s.status || "waiting";
 
-  $("status").textContent=
-    st==="armed"
-      ?"🟢 BELL AKTIF — TUNGGU TEKANAN"
-      :st==="locked"
-        ?"🔴 SOAL TERKUNCI"
-        :"⏳ MENUNGGU / SIAP RESET";
+  $("status").className =
+    "status "+st;
 
-  $("arm").disabled=
+  if(st==="armed"){
+
+    $("status").textContent =
+      "🟢 BELL AKTIF — TUNGGU TEKANAN";
+
+  }else if(st==="locked"){
+
+    $("status").textContent =
+      "🔴 SOAL TERKUNCI";
+
+  }else{
+
+    $("status").textContent =
+      "⏳ MENUNGGU / SIAP RESET";
+
+  }
+
+
+  $("arm").disabled =
     st==="armed" ||
     !s.players ||
-    Object.keys(s.players).length<2;
+    Object.keys(s.players).length < 2;
 
-  $("reset").disabled=!s.players;
+  $("reset").disabled =
+    !s.players;
 
-  $("winner").textContent=
+
+  $("winner").textContent =
     s.winner
-      ?"🏆 PESERTA "+s.winner+" MENANG"
-      :"";
+      ? "🏆 PESERTA "+s.winner+" MENANG"
+      : "";
 
-  if(s.winner && s.winner!==lastWinner){
-    lastWinner=s.winner;
 
-    // Bell langsung berbunyi ketika ada pemenang
+/* =========================
+   PEMENANG
+========================= */
+
+  if(
+    s.winner &&
+    s.winner !== lastWinner
+  ){
+
+    lastWinner = s.winner;
+
+    /*
+      SCHOOL BELL LANGSUNG
+      BERBUNYI SAAT PEMENANG
+      DITENTUKAN.
+    */
+
     play("bellSound");
 
     log(
-      "🏆 Peserta "+s.winner+
+      "🏆 Peserta "+
+      s.winner+
       " MENANG — school bell berbunyi",
       "ok"
     );
   }
 
   if(!s.winner){
-    lastWinner=null;
+
+    lastWinner = null;
+
   }
 
-  const key=
-    (s.roundId||"")+"|"+
-    (s.timerStartAt||"")+"|"+
-    (s.timerDuration||0);
 
-  if(key!==lastTimerKey){
-    lastTimerKey=key;
+/* =========================
+   TIMER KEY
+========================= */
+
+  const key =
+    (s.roundId || "")+
+    "|"+
+    (s.timerStartAt || "")+
+    "|"+
+    (s.timerDuration || 0);
+
+  if(key !== lastTimerKey){
+
+    lastTimerKey = key;
+
     startTimer(s);
+
   }
+
 }
 
-/*
-  TIMER:
-  Pemenang → school bell → tunggu 5 detik → countdown.
-*/
+
+/* ==================================================
+   TIMER DENGAN JEDA 5 DETIK
+==================================================
+
+   ALUR:
+
+   PEMENANG
+      ↓
+   SCHOOL BELL
+      ↓
+   JEDA 5 DETIK
+      ↓
+   COUNTDOWN
+      ↓
+   TIME'S UP
+
+================================================== */
+
 function startTimer(s){
+
   clearInterval(timerLoop);
 
-  $("timer").textContent="—";
+  $("timer").textContent = "—";
+
+
+  /*
+    Tidak ada timer kalau:
+    - belum ada winner
+    - timer OFF
+    - belum ada timerStartAt
+  */
 
   if(
     !s.timerStartAt ||
     !s.timerDuration ||
     !s.winner
   ){
+
     return;
   }
 
-  const delay=5000;
 
-  const start=
-    Number(s.timerStartAt)+delay;
+  /*
+    JEDA SETELAH SCHOOL BELL
 
-  const duration=
+    5000 ms = 5 detik
+  */
+
+  const DELAY = 5000;
+
+
+  /*
+    timerStart adalah waktu
+    countdown benar-benar dimulai.
+  */
+
+  const timerStart =
+    Number(s.timerStartAt) +
+    DELAY;
+
+
+  const duration =
     Number(s.timerDuration);
 
-  const end=
-    start+(duration*1000);
 
-  let last=-1;
+  const timerEnd =
+    timerStart +
+    (duration * 1000);
 
-  const tick=()=>{
-    const current=now();
 
-    // Jeda 5 detik setelah bell
-    if(current<start){
-      $("timer").textContent="⏳";
+  let last = -1;
+
+
+  function tick(){
+
+    const current =
+      now();
+
+
+    /*
+      ==========================
+      JEDA 5 DETIK
+      ==========================
+    */
+
+    if(current < timerStart){
+
+      $("timer").textContent =
+        "⏳";
+
       return;
     }
 
-    const left=
-      Math.ceil((end-current)/1000);
 
-    if(left>0){
+    /*
+      ==========================
+      COUNTDOWN
+      ==========================
+    */
 
-      $("timer").textContent=left;
+    const left =
+      Math.ceil(
+        (timerEnd-current)/1000
+      );
 
-      if(left!==last){
-        last=left;
+
+    if(left > 0){
+
+      $("timer").textContent =
+        left;
+
+
+      /*
+        Bunyi count.mp3
+        satu kali setiap angka.
+      */
+
+      if(left !== last){
+
+        last = left;
+
         play("countSound");
+
       }
 
     }else{
 
-      $("timer").textContent="0";
+      $("timer").textContent =
+        "0";
 
-      if(last!==0){
-        last=0;
+
+      /*
+        Times up hanya sekali.
+      */
+
+      if(last !== 0){
+
+        last = 0;
 
         play("timesUpSound");
 
@@ -250,125 +670,224 @@ function startTimer(s){
           "⏱ TIME'S UP",
           "danger"
         );
+
       }
 
+
       clearInterval(timerLoop);
+
     }
-  };
+
+  }
+
+
+  /*
+    Jalankan langsung.
+    Kalau masih dalam 5 detik,
+    tick hanya menampilkan ⏳.
+  */
 
   tick();
 
-  timerLoop=
-    setInterval(tick,100);
+
+  /*
+    Cek setiap 100 ms agar
+    perpindahan ke countdown
+    tetap presisi.
+  */
+
+  timerLoop =
+    setInterval(
+      tick,
+      100
+    );
+
 }
 
-document.querySelectorAll(".timerbtn").forEach(b=>{
-  b.onclick=async()=>{
-    unlock();
 
-    const sec=
-      Number(b.dataset.sec);
+/* =========================
+   PILIH TIMER
+========================= */
 
-    document
-      .querySelectorAll(".timerbtn")
-      .forEach(x=>x.classList.remove("active"));
+document
+  .querySelectorAll(".timerbtn")
+  .forEach(b=>{
 
-    b.classList.add("active");
+    b.onclick = async()=>{
 
-    await room.update({
-      timerDuration:sec
-    });
+      unlock();
 
-    log(
-      "⏱ Timer diatur: "+
-      (sec?sec+" detik":"OFF")
-    );
-  };
-});
+      const sec =
+        Number(b.dataset.sec);
+
+
+      document
+        .querySelectorAll(".timerbtn")
+        .forEach(x=>{
+          x.classList.remove("active");
+        });
+
+
+      b.classList.add("active");
+
+
+      await room.update({
+        timerDuration: sec
+      });
+
+
+      log(
+        "⏱ Timer diatur: "+
+        (
+          sec
+            ? sec+" detik"
+            : "OFF"
+        )
+      );
+
+    };
+
+  });
+
+
+/* =========================
+   SIAPKAN BELL
+========================= */
 
 async function arm(){
+
   unlock();
 
   try{
-    const s=(await room.get()).val();
+
+    const s =
+      (await room.get()).val();
+
 
     if(
       !s?.players ||
-      Object.keys(s.players).length<2
+      Object.keys(s.players).length < 2
     ){
+
       return log(
         "⚠️ Belum ada peserta.",
         "danger"
       );
+
     }
 
+
     await room.update({
+
       status:"armed",
+
       winner:null,
+
       winnerTime:null,
 
-      // Ronde baru mencegah curi-start
+      /*
+        Ronde baru
+      */
+
       roundId:round(),
 
+      /*
+        Timer belum berjalan.
+      */
+
       timerStartAt:null
+
     });
+
 
     log(
       "🟢 BELL AKTIF"
     );
 
+
   }catch(e){
 
     log(
-      "❌ Gagal: "+e.message,
+      "❌ Gagal: "+
+      e.message,
       "danger"
     );
+
   }
+
 }
 
+
+/* =========================
+   RESET SOAL
+========================= */
+
 async function reset(){
+
   unlock();
 
   try{
 
-    const result=
-      await room.transaction(current=>{
+    const result =
+      await room.transaction(
+        current=>{
 
-        if(!current)return;
+          if(!current)return;
 
-        const players={};
 
-        Object.entries(
-          current.players||{}
-        ).forEach(([token,p])=>{
+          const players = {};
 
-          players[token]={
-            ...p,
 
-            // Reset pelanggaran ronde
-            violationCount:0,
+          Object
+            .entries(
+              current.players || {}
+            )
+            .forEach(
+              ([token,p])=>{
 
-            // Reset ban
-            banned:false
+                players[token] = {
+
+                  ...p,
+
+                  /*
+                    Reset jumlah pelanggaran
+                  */
+
+                  violationCount:0,
+
+                  /*
+                    Reset ban
+                  */
+
+                  banned:false
+
+                };
+
+              }
+            );
+
+
+          return {
+
+            ...current,
+
+            status:"waiting",
+
+            winner:null,
+
+            winnerTime:null,
+
+            roundId:null,
+
+            timerStartAt:null,
+
+            players
+
           };
 
-        });
+        }
+      );
 
-        return {
-          ...current,
-
-          status:"waiting",
-
-          winner:null,
-          winnerTime:null,
-
-          roundId:null,
-
-          timerStartAt:null,
-
-          players
-        };
-      });
 
     if(result.committed){
 
@@ -383,76 +902,175 @@ async function reset(){
         "⚠️ Reset tidak dilakukan karena data berubah. Coba lagi.",
         "danger"
       );
+
     }
+
 
   }catch(e){
 
     log(
-      "❌ Gagal reset: "+e.message,
+      "❌ Gagal reset: "+
+      e.message,
       "danger"
     );
+
   }
+
 }
 
-$("arm").onclick=arm;
-$("reset").onclick=reset;
 
-document.addEventListener("keydown",e=>{
+/* =========================
+   BUTTON
+========================= */
 
-  const tag=
-    document.activeElement?.tagName;
+$("arm").onclick =
+  arm;
 
-  if(
-    ["INPUT","TEXTAREA","SELECT"]
-    .includes(tag)
-  )return;
+$("reset").onclick =
+  reset;
 
-  if(
-    e.key==="Enter" &&
-    !e.repeat
-  ){
-    e.preventDefault();
-    arm();
+
+/* =========================
+   KEYBOARD SHORTCUT
+========================= */
+
+document.addEventListener(
+  "keydown",
+  e=>{
+
+    const tag =
+      document.activeElement?.tagName;
+
+
+    if(
+      [
+        "INPUT",
+        "TEXTAREA",
+        "SELECT"
+      ].includes(tag)
+    ){
+
+      return;
+
+    }
+
+
+    /*
+      ENTER = SIAPKAN BELL
+    */
+
+    if(
+      e.key === "Enter" &&
+      !e.repeat
+    ){
+
+      e.preventDefault();
+
+      arm();
+
+    }
+
+
+    /*
+      R = RESET
+    */
+
+    if(
+      e.key.toLowerCase() === "r" &&
+      !e.repeat
+    ){
+
+      e.preventDefault();
+
+      reset();
+
+    }
+
   }
+);
 
-  if(
-    e.key.toLowerCase()==="r" &&
-    !e.repeat
-  ){
-    e.preventDefault();
-    reset();
-  }
-});
+
+/* =========================
+   FIREBASE ROOM
+========================= */
 
 room.on("value",s=>{
-  render(s.val());
+
+  render(
+    s.val()
+  );
+
 });
 
-viol.limitToLast(80).on("child_added",s=>{
 
-  const v=s.val();
+/* =========================
+   PELANGGARAN
+========================= */
 
-  if(
-    !v ||
-    s.key===lastViolation
-  )return;
+viol
+  .limitToLast(80)
+  .on("child_added",s=>{
 
-  lastViolation=s.key;
+    const v =
+      s.val();
 
-  const msg=
-    "🚨 Peserta "+v.number+
-    " pelanggaran #"+
-    (v.count||"?")+
-    (v.banned?" — BANNED":"");
 
-  log(msg,"danger");
+    if(
+      !v ||
+      s.key === lastViolation
+    ){
 
-  play("warningSound");
+      return;
 
-  if(v.banned){
-    play("timesUpSound");
-  }
-});
+    }
+
+
+    lastViolation =
+      s.key;
+
+
+    const msg =
+      "🚨 Peserta "+
+      v.number+
+      " pelanggaran #"+
+      (v.count || "?")+
+      (
+        v.banned
+          ? " — BANNED"
+          : ""
+      );
+
+
+    log(
+      msg,
+      "danger"
+    );
+
+
+    /*
+      Warning alarm
+    */
+
+    play(
+      "warningSound"
+    );
+
+
+    /*
+      Jika pelanggaran ke-3,
+      times-up juga berbunyi.
+    */
+
+    if(v.banned){
+
+      play(
+        "timesUpSound"
+      );
+
+    }
+
+  });
+
 </script>
 
 </body>
