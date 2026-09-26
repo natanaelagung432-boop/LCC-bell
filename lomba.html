@@ -61,7 +61,21 @@ function startTimer(s){
 }
 document.querySelectorAll(".timerbtn").forEach(b=>b.onclick=async()=>{unlock();const sec=Number(b.dataset.sec);document.querySelectorAll(".timerbtn").forEach(x=>x.classList.remove("active"));b.classList.add("active");await room.update({timerDuration:sec});log("⏱ Timer diatur: "+(sec?sec+" detik":"OFF"))});
 async function arm(){unlock();try{const s=(await room.get()).val();if(!s?.players||Object.keys(s.players).length<2)return log("⚠️ Belum ada peserta.","danger");await room.update({status:"armed",winner:null,winnerTime:null,roundId:round(),timerStartAt:null});log("🟢 BELL AKTIF")}catch(e){log("❌ Gagal: "+e.message,"danger")}}
-async function reset(){unlock();try{await room.update({status:"waiting",winner:null,winnerTime:null,roundId:null,timerStartAt:null});log("🔄 SOAL DI-RESET")}catch(e){log("❌ Gagal reset: "+e.message,"danger")}}
+async function reset(){
+ unlock();
+ try{
+  const result=await room.transaction(current=>{
+   if(!current)return;
+   const players={};
+   Object.entries(current.players||{}).forEach(([token,p])=>{
+    players[token]={...p,violationCount:0,banned:false};
+   });
+   return {...current,status:"waiting",winner:null,winnerTime:null,roundId:null,timerStartAt:null,players};
+  });
+  if(result.committed)log("🔄 SOAL DI-RESET — semua BAN dan hitungan pelanggaran ronde dihapus","ok");
+  else log("⚠️ Reset tidak dilakukan karena data berubah. Coba lagi.","danger");
+ }catch(e){log("❌ Gagal reset: "+e.message,"danger")}
+}
 $("arm").onclick=arm;$("reset").onclick=reset;
 document.addEventListener("keydown",e=>{const tag=document.activeElement?.tagName;if(["INPUT","TEXTAREA","SELECT"].includes(tag))return;if(e.key==="Enter"&&!e.repeat){e.preventDefault();arm()}if(e.key.toLowerCase()==="r"&&!e.repeat){e.preventDefault();reset()}});
 room.on("value",s=>render(s.val()));
