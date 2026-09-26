@@ -35,20 +35,17 @@ header{text-align:center;margin-bottom:18px}.brand{font-size:38px;font-weight:10
 <script src="firebase-config.js"></script>
 <script>
 const room=window.db.ref("lcc/current"),viol=window.db.ref("lcc/violations"),$=id=>document.getElementById(id);
-let lastWinner=null,lastViolation=null,lastTimerKey=null,timerLoop=null,serverOffset=0;
+let lastWinner=null,lastViolation=null,lastStatus=null,lastTimerKey=null,timerLoop=null,serverOffset=0;
 window.db.ref(".info/serverTimeOffset").on("value",s=>serverOffset=s.val()||0);
 function now(){return Date.now()+serverOffset}
 function round(){return "ROUND-"+Date.now().toString(36).toUpperCase()+"-"+Math.random().toString(36).slice(2,7).toUpperCase()}
-function play(id){try{const a=$(id);if(!a)return;a.currentTime=0;a.volume=1;const p=a.play();if(p)p.catch(()=>{})}catch(e){}}
-function unlock(){["bellSound","warningSound","countSound","timesUpSound"].forEach(id=>{try{const a=$(id);if(!a)return;a.muted=true;const p=a.play();p?.then(()=>{a.pause();a.currentTime=0;a.muted=false}).catch(()=>{})}catch(e){}})}
+function play(id){try{const a=$(id);a.currentTime=0;a.volume=1;const p=a.play();if(p)p.catch(()=>{})}catch(e){}}
+function unlock(){["bellSound","warningSound","countSound","timesUpSound"].forEach(id=>{try{const a=$(id);a.muted=true;const p=a.play();p?.then(()=>{a.pause();a.currentTime=0;a.muted=false}).catch(()=>{})}catch(e){}})}
 function log(t,cls=""){const d=document.createElement("div");d.className="item "+cls;d.textContent=t;$("logs").prepend(d);while($("logs").children.length>80)$("logs").lastChild.remove()}
 function render(s){
  s=s||{};const st=s.status||"waiting";$("status").className="status "+st;
  $("status").textContent=st==="armed"?"🟢 BELL AKTIF — TUNGGU TEKANAN":st==="locked"?"🔴 SOAL TERKUNCI":"⏳ MENUNGGU / SIAP RESET";
- const players=s.players||{}; const count=Object.keys(players).length;
- const hasBan=Object.values(players).some(p=>p&&p.banned===true);
- $("arm").disabled=st!=="waiting"||count<2||hasBan;
- $("reset").disabled=count<1;
+ $("arm").disabled=st==="armed"||!s.players||Object.keys(s.players).length<2;$("reset").disabled=!s.players;
  $("winner").textContent=s.winner?"🏆 PESERTA "+s.winner+" MENANG":"";
  if(s.winner&&s.winner!==lastWinner){lastWinner=s.winner;play("bellSound");log("🏆 Peserta "+s.winner+" MENANG — school bell berbunyi","ok")}
  if(!s.winner)lastWinner=null;
@@ -58,70 +55,30 @@ function render(s){
 function startTimer(s){
  clearInterval(timerLoop);$("timer").textContent="—";
  if(!s.timerStartAt||!s.timerDuration||!s.winner)return;
- const start=Number(s.timerStartAt),duration=Number(s.timerDuration),end=start+duration*1000;let last=-1,finished=false;
- const tick=()=>{const t=now();if(t<start){$("timer").textContent="⏳";return}
-  const left=Math.ceil((end-t)/1000);
-  if(left>0){$("timer").textContent=left;if(left!==last){last=left;play("countSound")}}
-  else{$("timer").textContent="0";if(!finished){finished=true;play("timesUpSound");log("⏱ TIME'S UP","danger")}clearInterval(timerLoop)}
- };
+ const duration=Number(s.timerDuration),end=Number(s.timerStartAt)+duration*1000;let last=-1;
+ const tick=()=>{const left=Math.ceil((end-now())/1000);if(left>0){$("timer").textContent=left;if(left!==last){last=left;play("countSound")}}else{$("timer").textContent="0";if(last!==0){last=0;play("timesUpSound");log("⏱ TIME'S UP","danger")}clearInterval(timerLoop)}};
  tick();timerLoop=setInterval(tick,100);
 }
-document.querySelectorAll(".timerbtn").forEach(b=>b.onclick=async()=>{
- unlock();const sec=Number(b.dataset.sec);
- document.querySelectorAll(".timerbtn").forEach(x=>x.classList.remove("active"));b.classList.add("active");
- try{await room.update({timerDuration:sec});log("⏱ Timer diatur: "+(sec?sec+" detik":"OFF"))}
- catch(e){log("❌ Gagal mengatur timer: "+e.message,"danger")}
-});
-async function arm(){
- unlock();
- try{
-  const s=(await room.get()).val();
-  const players=s?.players||{};
-  if(!s||s.status!=="waiting")return log("⚠️ RESET SOAL dulu sebelum menyiapkan ronde berikutnya.","danger");
-  if(Object.keys(players).length<2)return log("⚠️ Belum ada peserta.","danger");
-  if(Object.values(players).some(p=>p&&p.banned===true))return log("⚠️ Ada peserta yang masih BANNED. Tekan RESET SOAL terlebih dahulu.","danger");
-  const rid=round();
-  await room.update({status:"armed",winner:null,winnerTime:null,roundId:rid,timerStartAt:null});
-  log("🟢 BELL AKTIF — ronde "+rid,"ok");
- }catch(e){log("❌ Gagal: "+e.message,"danger")}
-}
+document.querySelectorAll(".timerbtn").forEach(b=>b.onclick=async()=>{unlock();const sec=Number(b.dataset.sec);document.querySelectorAll(".timerbtn").forEach(x=>x.classList.remove("active"));b.classList.add("active");await room.update({timerDuration:sec});log("⏱ Timer diatur: "+(sec?sec+" detik":"OFF"))});
+async function arm(){unlock();try{const s=(await room.get()).val();if(!s?.players||Object.keys(s.players).length<2)return log("⚠️ Belum ada peserta.","danger");await room.update({status:"armed",winner:null,winnerTime:null,roundId:round(),timerStartAt:null});log("🟢 BELL AKTIF")}catch(e){log("❌ Gagal: "+e.message,"danger")}}
 async function reset(){
  unlock();
  try{
-  const snap=await room.get();
-  const current=snap.val();
-  if(!current)return;
-  const updates={
-   status:"waiting",
-   winner:null,
-   winnerTime:null,
-   roundId:null,
-   timerStartAt:null
-  };
-  Object.keys(current.players||{}).forEach(token=>{
-   updates["players/"+token+"/banned"]=false;
-   updates["players/"+token+"/violationCount"]=0;
-   updates["players/"+token+"/banRoundId"]=null;
+  const result=await room.transaction(current=>{
+   if(!current)return;
+   const players={};
+   Object.entries(current.players||{}).forEach(([token,p])=>{
+    players[token]={...p,violationCount:0,banned:false};
+   });
+   return {...current,status:"waiting",winner:null,winnerTime:null,roundId:null,timerStartAt:null,players};
   });
-  await room.update(updates);
-  clearInterval(timerLoop);timerLoop=null;$("timer").textContent="—";
-  lastTimerKey=null;
-  log("🔄 SOAL DI-RESET — semua BAN dan hitungan pelanggaran ronde dihapus","ok");
+  if(result.committed)log("🔄 SOAL DI-RESET — semua BAN dan hitungan pelanggaran ronde dihapus","ok");
+  else log("⚠️ Reset tidak dilakukan karena data berubah. Coba lagi.","danger");
  }catch(e){log("❌ Gagal reset: "+e.message,"danger")}
 }
 $("arm").onclick=arm;$("reset").onclick=reset;
-document.addEventListener("keydown",e=>{
- const tag=document.activeElement?.tagName;if(["INPUT","TEXTAREA","SELECT"].includes(tag))return;
- if(e.key==="Enter"&&!e.repeat){e.preventDefault();arm()}
- if(e.key.toLowerCase()==="r"&&!e.repeat){e.preventDefault();reset()}
-});
+document.addEventListener("keydown",e=>{const tag=document.activeElement?.tagName;if(["INPUT","TEXTAREA","SELECT"].includes(tag))return;if(e.key==="Enter"&&!e.repeat){e.preventDefault();arm()}if(e.key.toLowerCase()==="r"&&!e.repeat){e.preventDefault();reset()}});
 room.on("value",s=>render(s.val()));
-viol.limitToLast(80).on("child_added",s=>{
- const v=s.val();if(!v||s.key===lastViolation)return;lastViolation=s.key;
- const msg="🚨 Peserta "+v.number+" pelanggaran #"+(v.count||"?")+(v.banned?" — BANNED":"");
- log(msg,"danger");
- unlock();play("warningSound");
- if(v.banned)play("timesUpSound");
-});
+viol.limitToLast(80).on("child_added",s=>{const v=s.val();if(!v||s.key===lastViolation)return;lastViolation=s.key;const msg="🚨 Peserta "+v.number+" pelanggaran #"+(v.count||"?")+(v.banned?" — BANNED":"");log(msg,"danger");play("warningSound");if(v.banned)play("timesUpSound")});
 </script>
 </body></html>
