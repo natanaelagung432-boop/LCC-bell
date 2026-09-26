@@ -3,78 +3,710 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>LCC Bell — Peserta</title>
+
 <style>
-*{box-sizing:border-box}body{margin:0;min-height:100vh;background:#0b1424;color:#f8fafc;font-family:Arial,sans-serif;display:flex;align-items:center;justify-content:center}.wrap{width:min(620px,94%);text-align:center}
-.brand{font-size:34px;font-weight:1000}.sub{color:#94a3b8;margin:5px 0 20px}.card{background:#111d31;border-radius:24px;padding:28px}.number{font-size:56px;font-weight:1000}.status{padding:17px;border-radius:16px;background:#334155;font-size:21px;font-weight:1000;margin:18px 0}.status.armed{background:#14532d}.status.locked{background:#7f1d1d}
-#buzz{width:100%;height:190px;border:0;border-radius:28px;background:#16a34a;color:#fff;font-size:44px;font-weight:1000;cursor:pointer;box-shadow:0 10px 0 #166534}#buzz:active{transform:translateY(6px);box-shadow:0 4px 0 #166534}
-#buzz.banned{background:#7f1d1d;box-shadow:none;cursor:not-allowed}#message{min-height:36px;margin-top:17px;font-size:20px;font-weight:1000}.notice{margin-top:16px;padding:16px;border-radius:15px;background:#fff3cd;color:#856404;font-weight:900;line-height:1.5}.notice.danger{background:#7f1d1d;color:#fff}.timer{font-size:72px;font-weight:1000;margin:10px}.winner{font-size:28px;font-weight:1000}.note{color:#94a3b8;font-size:13px;margin-top:17px;line-height:1.45}
+*{box-sizing:border-box}
+
+body{
+  margin:0;
+  min-height:100vh;
+  background:#0b1424;
+  color:#f8fafc;
+  font-family:Arial,sans-serif;
+  display:flex;
+  align-items:center;
+  justify-content:center
+}
+
+.wrap{
+  width:min(620px,94%);
+  text-align:center
+}
+
+.brand{
+  font-size:34px;
+  font-weight:1000
+}
+
+.sub{
+  color:#94a3b8;
+  margin:5px 0 20px
+}
+
+.card{
+  background:#111d31;
+  border-radius:24px;
+  padding:28px
+}
+
+.number{
+  font-size:56px;
+  font-weight:1000
+}
+
+.status{
+  padding:17px;
+  border-radius:16px;
+  background:#334155;
+  font-size:21px;
+  font-weight:1000;
+  margin:18px 0
+}
+
+.status.armed{
+  background:#14532d
+}
+
+.status.locked{
+  background:#7f1d1d
+}
+
+#buzz{
+  width:100%;
+  height:190px;
+  border:0;
+  border-radius:28px;
+  background:#16a34a;
+  color:#fff;
+  font-size:44px;
+  font-weight:1000;
+  cursor:pointer;
+  box-shadow:0 10px 0 #166534
+}
+
+#buzz:active{
+  transform:translateY(6px);
+  box-shadow:0 4px 0 #166534
+}
+
+#buzz.banned{
+  background:#7f1d1d;
+  box-shadow:none;
+  cursor:not-allowed
+}
+
+#message{
+  min-height:36px;
+  margin-top:17px;
+  font-size:20px;
+  font-weight:1000
+}
+
+.notice{
+  margin-top:16px;
+  padding:16px;
+  border-radius:15px;
+  background:#fff3cd;
+  color:#856404;
+  font-weight:900;
+  line-height:1.5
+}
+
+.notice.danger{
+  background:#7f1d1d;
+  color:#fff
+}
+
+.timer{
+  font-size:72px;
+  font-weight:1000;
+  margin:10px
+}
+
+.winner{
+  font-size:28px;
+  font-weight:1000
+}
+
+.note{
+  color:#94a3b8;
+  font-size:13px;
+  margin-top:17px;
+  line-height:1.45
+}
 </style>
 </head>
+
 <body>
-<div class="wrap"><div class="brand">🔔 LCC BELL</div><div class="sub">PESERTA</div><div class="card">
-<div id="identity">Memeriksa QR...</div><div id="status" class="status">MEMERIKSA...</div><div id="timer" class="timer"></div><div id="winner" class="winner"></div>
-<button id="buzz" disabled>TEKAN</button><div id="notice" class="notice">⏳ Menunggu juri.</div><div id="message"></div><div class="note">Tekan hanya saat bell sudah disiapkan. Spam sebelum aktif atau setelah terkunci akan dihitung sebagai pelanggaran.</div>
-</div></div>
-<audio id="warningSound" src="warning-alarm.mp3" preload="auto"></audio><audio id="countSound" src="count.mp3" preload="auto"></audio><audio id="timesUpSound" src="times-up.mp3" preload="auto"></audio><audio id="bellSound" src="school-bell.mp3" preload="auto"></audio>
-<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-database-compat.js"></script><script src="firebase-config.js"></script>
+
+<div class="wrap">
+
+  <div class="brand">🔔 LCC BELL</div>
+
+  <div class="sub">PESERTA</div>
+
+  <div class="card">
+
+    <div id="identity">
+      Memeriksa QR...
+    </div>
+
+    <div id="status" class="status">
+      MEMERIKSA...
+    </div>
+
+    <div id="timer" class="timer"></div>
+
+    <div id="winner" class="winner"></div>
+
+    <button id="buzz" disabled>
+      TEKAN
+    </button>
+
+    <div id="notice" class="notice">
+      ⏳ Menunggu juri.
+    </div>
+
+    <div id="message"></div>
+
+    <div class="note">
+      Tekan hanya saat bell sudah disiapkan.
+      Spam sebelum aktif atau setelah terkunci akan dihitung sebagai pelanggaran.
+    </div>
+
+  </div>
+
+</div>
+
+<audio id="warningSound" src="warning-alarm.mp3" preload="auto"></audio>
+<audio id="countSound" src="count.mp3" preload="auto"></audio>
+<audio id="timesUpSound" src="times-up.mp3" preload="auto"></audio>
+<audio id="bellSound" src="school-bell.mp3" preload="auto"></audio>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-database-compat.js"></script>
+<script src="firebase-config.js"></script>
+
 <script>
-const room=window.db.ref("lcc/current"),params=new URLSearchParams(location.search),token=params.get("token"),$=id=>document.getElementById(id);
-let myNumber=null,valid=false,last=null,lastTimerKey=null,timerLoop=null,serverOffset=0,violationBusy=false;
-window.db.ref(".info/serverTimeOffset").on("value",s=>serverOffset=s.val()||0);function now(){return Date.now()+serverOffset}
-function play(id){try{const a=$(id);a.currentTime=0;a.volume=1;const p=a.play();if(p)p.catch(()=>{})}catch(e){}}
-function unlock(){["warningSound","countSound","timesUpSound","bellSound"].forEach(id=>{try{const a=$(id);a.muted=true;const p=a.play();p?.then(()=>{a.pause();a.currentTime=0;a.muted=false}).catch(()=>{})}catch(e){}})}
-function notice(t,d=false){$("notice").className="notice"+(d?" danger":"");$("notice").innerHTML=t}
-function render(s){
- if(!valid)return;last=s||{};const st=last.status||"waiting";$("status").className="status "+st;$("status").textContent=st==="armed"?"🟢 BELL AKTIF":st==="locked"?"🔴 SOAL TERKUNCI":"⏳ MENUNGGU JURI";
- const p=last.players?.[token]||{};const banned=!!p.banned;$("buzz").className=banned?"banned":"";
- if(banned){$("buzz").disabled=true;$("buzz").textContent="🚫 BANNED";notice("🚫 ANDA DIBLOKIR UNTUK SOAL INI.<br>3× pelanggaran. Tunggu juri melakukan RESET SOAL.",true)}
- else if(st==="armed"){ $("buzz").disabled=false;$("buzz").textContent="TEKAN";notice("🟢 BELL AKTIF.<br>Tekan satu kali.")}
- else if(st==="locked"){ $("buzz").disabled=false;$("buzz").textContent="TEKAN";notice(Number(last.winner)===Number(myNumber)?"🏆 ANDA MENANG! Jangan tekan lagi.":"🔴 SOAL TERKUNCI. Peserta "+last.winner+" menekan lebih dahulu.");}
- else{$("buzz").disabled=false;$("buzz").textContent="TEKAN";notice("⏳ BELUM AKTIF.<br>Menekan sekarang akan dihitung sebagai pelanggaran.",true)}
- $("winner").textContent=last.winner?"🏆 PESERTA "+last.winner+" MENANG":"";
- const key=(last.roundId||"")+"|"+(last.timerStartAt||"")+"|"+(last.timerDuration||0);if(key!==lastTimerKey){lastTimerKey=key;startTimer(last)}
+const room=window.db.ref("lcc/current"),
+      params=new URLSearchParams(location.search),
+      token=params.get("token"),
+      $=id=>document.getElementById(id);
+
+let myNumber=null,
+    valid=false,
+    last=null,
+    lastTimerKey=null,
+    timerLoop=null,
+    serverOffset=0,
+    violationBusy=false;
+
+window.db.ref(".info/serverTimeOffset").on("value",s=>{
+  serverOffset=s.val()||0;
+});
+
+function now(){
+  return Date.now()+serverOffset;
 }
-function startTimer(s){clearInterval(timerLoop);$("timer").textContent="";if(!s.timerStartAt||!s.timerDuration||!s.winner)return;const end=Number(s.timerStartAt)+Number(s.timerDuration)*1000;let prev=-1;const tick=()=>{const left=Math.ceil((end-now())/1000);if(left>0){$("timer").textContent=left;if(left!==prev){prev=left;play("countSound")}}else{$("timer").textContent="0";if(prev!==0){prev=0;play("timesUpSound")}clearInterval(timerLoop)}};tick();timerLoop=setInterval(tick,100)}
-async function violation(expectedStatus){
- if(violationBusy)return;violationBusy=true;unlock();play("warningSound");
- try{
-   const result=await room.transaction(current=>{
-     if(!current?.players?.[token])return;
-     const p=current.players[token];if(p.banned)return;
-     if(current.status==="armed" && current.winner==null)return;
-     const count=(Number(p.violationCount)||0)+1,banned=count>=3;
-     return {...current,players:{...current.players,[token]:{...p,violationCount:count,banned}}};
-   });
-   if(result.committed){
-     const p=result.snapshot.val().players[token],count=p.violationCount,banned=!!p.banned;
-     await room.child("violations").push({number:myNumber,token,type:expectedStatus==="waiting"?"EARLY_PRESS":"LOCKED_PRESS",count,banned,roundId:result.snapshot.val().roundId||null,time:firebase.database.ServerValue.TIMESTAMP});
-     if(banned){play("timesUpSound");notice("🚫 BANNED!<br>3× pelanggaran pada soal ini. Tunggu RESET SOAL.",true);$("buzz").disabled=true}
-     else notice("⚠️ PELANGGARAN #"+count+" tercatat.<br>Jangan menekan lagi.",true);
-   }
- }catch(e){$("message").textContent="Gagal mencatat pelanggaran: "+e.message}
- violationBusy=false;
+
+function play(id){
+  try{
+    const a=$(id);
+
+    a.currentTime=0;
+    a.volume=1;
+
+    const p=a.play();
+
+    if(p)p.catch(()=>{});
+
+  }catch(e){}
 }
-$("buzz").onclick=async()=>{
- if(!valid||!last)return;unlock();
- const st=last.status||"waiting";const p=last.players?.[token]||{};if(p.banned)return;
- if(st!=="armed"||last.winner!=null){await violation(st);return}
- const clickedRound=last.roundId;
- $("buzz").disabled=true;$("message").textContent="⏳ Memproses...";
- try{
-  const r=await room.transaction(current=>{
-   if(!current?.players?.[token])return;if(current.players[token].banned)return;
-   if(current.status!=="armed"||current.winner!=null||current.roundId!==clickedRound)return;
-   return {...current,status:"locked",winner:myNumber,winnerTime:firebase.database.ServerValue.TIMESTAMP,timerStartAt:firebase.database.ServerValue.TIMESTAMP};
+
+function unlock(){
+
+  [
+    "warningSound",
+    "countSound",
+    "timesUpSound",
+    "bellSound"
+  ].forEach(id=>{
+
+    try{
+
+      const a=$(id);
+
+      a.muted=true;
+
+      const p=a.play();
+
+      p?.then(()=>{
+
+        a.pause();
+        a.currentTime=0;
+        a.muted=false;
+
+      }).catch(()=>{});
+
+    }catch(e){}
   });
-  if(!r.committed){$("buzz").disabled=false;const c=r.snapshot.val()||{};if(c.status!=="armed"||c.winner!=null)await violation(c.status||"locked");else $("message").textContent="Ronde berubah. Tekanan ditolak."}
-  else{$("message").textContent="🏆 ANDA MENANG!"}
- }catch(e){$("buzz").disabled=false;$("message").textContent="❌ "+e.message}
-};
-async function validate(){
- if(!token){$("identity").textContent="❌ QR tidak valid";return}
- const s=await room.child("players").child(token).get();if(!s.exists()){$("identity").textContent="❌ QR tidak terdaftar";return}
- myNumber=s.val().number;valid=true;$("identity").innerHTML="<div class='number'>PESERTA "+myNumber+"</div>";room.on("value",s=>render(s.val()))
 }
+
+function notice(t,d=false){
+
+  $("notice").className=
+    "notice"+(d?" danger":"");
+
+  $("notice").innerHTML=t;
+}
+
+function render(s){
+
+  if(!valid)return;
+
+  last=s||{};
+
+  const st=
+    last.status||"waiting";
+
+  $("status").className=
+    "status "+st;
+
+  $("status").textContent=
+    st==="armed"
+      ?"🟢 BELL AKTIF"
+      :st==="locked"
+        ?"🔴 SOAL TERKUNCI"
+        :"⏳ MENUNGGU JURI";
+
+  const p=
+    last.players?.[token]||{};
+
+  const banned=
+    !!p.banned;
+
+  $("buzz").className=
+    banned?"banned":"";
+
+  if(banned){
+
+    $("buzz").disabled=true;
+
+    $("buzz").textContent=
+      "🚫 BANNED";
+
+    notice(
+      "🚫 ANDA DIBLOKIR UNTUK SOAL INI.<br>"+
+      "3× pelanggaran. Tunggu juri melakukan RESET SOAL.",
+      true
+    );
+
+  }else if(st==="armed"){
+
+    $("buzz").disabled=false;
+
+    $("buzz").textContent=
+      "TEKAN";
+
+    notice(
+      "🟢 BELL AKTIF.<br>"+
+      "Tekan satu kali."
+    );
+
+  }else if(st==="locked"){
+
+    $("buzz").disabled=false;
+
+    $("buzz").textContent=
+      "TEKAN";
+
+    notice(
+      Number(last.winner)===Number(myNumber)
+        ?"🏆 ANDA MENANG! Jangan tekan lagi."
+        :"🔴 SOAL TERKUNCI. Peserta "+
+         last.winner+
+         " menekan lebih dahulu."
+    );
+
+  }else{
+
+    $("buzz").disabled=false;
+
+    $("buzz").textContent=
+      "TEKAN";
+
+    notice(
+      "⏳ BELUM AKTIF.<br>"+
+      "Menekan sekarang akan dihitung sebagai pelanggaran.",
+      true
+    );
+  }
+
+  $("winner").textContent=
+    last.winner
+      ?"🏆 PESERTA "+last.winner+" MENANG"
+      :"";
+
+  const key=
+    (last.roundId||"")+"|"+
+    (last.timerStartAt||"")+"|"+
+    (last.timerDuration||0);
+
+  if(key!==lastTimerKey){
+
+    lastTimerKey=key;
+
+    startTimer(last);
+  }
+}
+
+/*
+  TIMER PESERTA
+
+  Pemenang
+      ↓
+  school-bell.mp3
+      ↓
+  tunggu 5 detik
+      ↓
+  countdown mulai
+*/
+function startTimer(s){
+
+  clearInterval(timerLoop);
+
+  $("timer").textContent="";
+
+  if(
+    !s.timerStartAt ||
+    !s.timerDuration ||
+    !s.winner
+  ){
+    return;
+  }
+
+  const delay=5000;
+
+  const start=
+    Number(s.timerStartAt)+delay;
+
+  const duration=
+    Number(s.timerDuration);
+
+  const end=
+    start+(duration*1000);
+
+  let prev=-1;
+
+  const tick=()=>{
+
+    const current=now();
+
+    // Jeda 5 detik setelah bell
+    if(current<start){
+
+      $("timer").textContent="⏳";
+
+      return;
+    }
+
+    const left=
+      Math.ceil((end-current)/1000);
+
+    if(left>0){
+
+      $("timer").textContent=left;
+
+      if(left!==prev){
+
+        prev=left;
+
+        play("countSound");
+      }
+
+    }else{
+
+      $("timer").textContent="0";
+
+      if(prev!==0){
+
+        prev=0;
+
+        play("timesUpSound");
+      }
+
+      clearInterval(timerLoop);
+    }
+  };
+
+  tick();
+
+  timerLoop=
+    setInterval(tick,100);
+}
+
+async function violation(expectedStatus){
+
+  if(violationBusy)return;
+
+  violationBusy=true;
+
+  unlock();
+
+  play("warningSound");
+
+  try{
+
+    const result=
+      await room.transaction(current=>{
+
+        if(!current?.players?.[token])return;
+
+        const p=
+          current.players[token];
+
+        if(p.banned)return;
+
+        if(
+          current.status==="armed" &&
+          current.winner==null
+        )return;
+
+        const count=
+          (Number(p.violationCount)||0)+1;
+
+        const banned=
+          count>=3;
+
+        return {
+          ...current,
+
+          players:{
+            ...current.players,
+
+            [token]:{
+              ...p,
+              violationCount:count,
+              banned
+            }
+          }
+        };
+      });
+
+    if(result.committed){
+
+      const p=
+        result.snapshot.val()
+          .players[token];
+
+      const count=
+        p.violationCount;
+
+      const banned=
+        !!p.banned;
+
+      await room
+        .child("violations")
+        .push({
+
+          number:myNumber,
+
+          token,
+
+          type:
+            expectedStatus==="waiting"
+              ?"EARLY_PRESS"
+              :"LOCKED_PRESS",
+
+          count,
+
+          banned,
+
+          roundId:
+            result.snapshot.val()
+              .roundId||null,
+
+          time:
+            firebase.database.ServerValue.TIMESTAMP
+        });
+
+      if(banned){
+
+        play("timesUpSound");
+
+        notice(
+          "🚫 BANNED!<br>"+
+          "3× pelanggaran pada soal ini. "+
+          "Tunggu RESET SOAL.",
+          true
+        );
+
+        $("buzz").disabled=true;
+
+      }else{
+
+        notice(
+          "⚠️ PELANGGARAN #"+count+
+          " tercatat.<br>"+
+          "Jangan menekan lagi.",
+          true
+        );
+      }
+    }
+
+  }catch(e){
+
+    $("message").textContent=
+      "Gagal mencatat pelanggaran: "+
+      e.message;
+  }
+
+  violationBusy=false;
+}
+
+$("buzz").onclick=async()=>{
+
+  if(!valid || !last)return;
+
+  unlock();
+
+  const st=
+    last.status||"waiting";
+
+  const p=
+    last.players?.[token]||{};
+
+  if(p.banned)return;
+
+  /*
+    Jika bell belum aktif atau soal sudah terkunci,
+    tekan dianggap pelanggaran.
+  */
+  if(
+    st!=="armed" ||
+    last.winner!=null
+  ){
+
+    await violation(st);
+
+    return;
+  }
+
+  const clickedRound=
+    last.roundId;
+
+  $("buzz").disabled=true;
+
+  $("message").textContent=
+    "⏳ Memproses...";
+
+  try{
+
+    const r=
+      await room.transaction(current=>{
+
+        if(!current?.players?.[token])
+          return;
+
+        if(
+          current.players[token].banned
+        )return;
+
+        if(
+          current.status!=="armed" ||
+          current.winner!=null ||
+          current.roundId!==clickedRound
+        )return;
+
+        return {
+
+          ...current,
+
+          status:"locked",
+
+          winner:myNumber,
+
+          winnerTime:
+            firebase.database.ServerValue.TIMESTAMP,
+
+          /*
+            Timer dimulai dari waktu
+            kemenangan. Tampilan timer
+            menambahkan delay 5 detik.
+          */
+          timerStartAt:
+            firebase.database.ServerValue.TIMESTAMP
+        };
+      });
+
+    if(!r.committed){
+
+      $("buzz").disabled=false;
+
+      const c=
+        r.snapshot.val()||{};
+
+      if(
+        c.status!=="armed" ||
+        c.winner!=null
+      ){
+
+        await violation(
+          c.status||"locked"
+        );
+
+      }else{
+
+        $("message").textContent=
+          "Ronde berubah. Tekanan ditolak.";
+      }
+
+    }else{
+
+      $("message").textContent=
+        "🏆 ANDA MENANG!";
+    }
+
+  }catch(e){
+
+    $("buzz").disabled=false;
+
+    $("message").textContent=
+      "❌ "+e.message;
+  }
+};
+
+async function validate(){
+
+  if(!token){
+
+    $("identity").textContent=
+      "❌ QR tidak valid";
+
+    return;
+  }
+
+  const s=
+    await room
+      .child("players")
+      .child(token)
+      .get();
+
+  if(!s.exists()){
+
+    $("identity").textContent=
+      "❌ QR tidak terdaftar";
+
+    return;
+  }
+
+  myNumber=
+    s.val().number;
+
+  valid=true;
+
+  $("identity").innerHTML=
+    "<div class='number'>PESERTA "+
+    myNumber+
+    "</div>";
+
+  room.on("value",s=>{
+    render(s.val());
+  });
+}
+
 validate();
 </script>
-</body></html>
+
+</body>
+</html>
