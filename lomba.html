@@ -55,8 +55,8 @@ function render(s){
 function startTimer(s){
  clearInterval(timerLoop);$("timer").textContent="—";
  if(!s.timerStartAt||!s.timerDuration||!s.winner)return;
- const duration=Number(s.timerDuration),end=Number(s.timerStartAt)+duration*1000;let last=-1;
- const tick=()=>{const left=Math.ceil((end-now())/1000);if(left>0){$("timer").textContent=left;if(left!==last){last=left;play("countSound")}}else{$("timer").textContent="0";if(last!==0){last=0;play("timesUpSound");log("⏱ TIME'S UP","danger")}clearInterval(timerLoop)}};
+ const start=Number(s.timerStartAt),duration=Number(s.timerDuration),end=start+duration*1000;let last=-1,finished=false;
+ const tick=()=>{const t=now();if(t<start){$("timer").textContent="⏳";return}const left=Math.ceil((end-t)/1000);if(left>0){$("timer").textContent=left;if(left!==last){last=left;play("countSound")}}else{$("timer").textContent="0";if(!finished){finished=true;play("timesUpSound");log("⏱ TIME'S UP","danger")}clearInterval(timerLoop)}};
  tick();timerLoop=setInterval(tick,100);
 }
 document.querySelectorAll(".timerbtn").forEach(b=>b.onclick=async()=>{unlock();const sec=Number(b.dataset.sec);document.querySelectorAll(".timerbtn").forEach(x=>x.classList.remove("active"));b.classList.add("active");await room.update({timerDuration:sec});log("⏱ Timer diatur: "+(sec?sec+" detik":"OFF"))});
