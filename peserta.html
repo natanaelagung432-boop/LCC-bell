@@ -18,141 +18,62 @@
 <audio id="warningSound" src="warning-alarm.mp3" preload="auto"></audio><audio id="countSound" src="count.mp3" preload="auto"></audio><audio id="timesUpSound" src="times-up.mp3" preload="auto"></audio><audio id="bellSound" src="school-bell.mp3" preload="auto"></audio>
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-database-compat.js"></script><script src="firebase-config.js"></script>
 <script>
-const room=window.db.ref("lcc/current"),viol=window.db.ref("lcc/violations"),params=new URLSearchParams(location.search),token=params.get("token"),$=id=>document.getElementById(id);
-let myNumber=null,valid=false,last=null,lastTimerKey=null,timerLoop=null,serverOffset=0,violationBusy=false,lastWinner=null;
-window.db.ref(".info/serverTimeOffset").on("value",s=>serverOffset=s.val()||0);
-function now(){return Date.now()+serverOffset}
-function play(id){try{const a=$(id);if(!a)return;a.currentTime=0;a.volume=1;const p=a.play();if(p)p.catch(()=>{})}catch(e){}}
-function unlock(){["warningSound","countSound","timesUpSound","bellSound"].forEach(id=>{try{const a=$(id);if(!a)return;a.muted=true;const p=a.play();p?.then(()=>{a.pause();a.currentTime=0;a.muted=false}).catch(()=>{})}catch(e){}})}
+const room=window.db.ref("lcc/current"),params=new URLSearchParams(location.search),token=params.get("token"),$=id=>document.getElementById(id);
+let myNumber=null,valid=false,last=null,lastTimerKey=null,timerLoop=null,serverOffset=0,violationBusy=false;
+window.db.ref(".info/serverTimeOffset").on("value",s=>serverOffset=s.val()||0);function now(){return Date.now()+serverOffset}
+function play(id){try{const a=$(id);a.currentTime=0;a.volume=1;const p=a.play();if(p)p.catch(()=>{})}catch(e){}}
+function unlock(){["warningSound","countSound","timesUpSound","bellSound"].forEach(id=>{try{const a=$(id);a.muted=true;const p=a.play();p?.then(()=>{a.pause();a.currentTime=0;a.muted=false}).catch(()=>{})}catch(e){}})}
 function notice(t,d=false){$("notice").className="notice"+(d?" danger":"");$("notice").innerHTML=t}
 function render(s){
- if(!valid)return;
- last=s||{};const st=last.status||"waiting";$("status").className="status "+st;
- $("status").textContent=st==="armed"?"🟢 BELL AKTIF":st==="locked"?"🔴 SOAL TERKUNCI":"⏳ MENUNGGU JURI";
- const p=last.players?.[token]||{};
- const banned=p.banned===true;
- $("buzz").className=banned?"banned":"";
- if(banned){
-  $("buzz").disabled=true;$("buzz").textContent="🚫 BANNED";
-  notice("🚫 ANDA DIBLOKIR UNTUK SOAL INI.<br>3× pelanggaran. Tunggu juri melakukan RESET SOAL.",true);
- }else if(st==="armed"){
-  $("buzz").disabled=false;$("buzz").textContent="TEKAN";
-  notice("🟢 BELL AKTIF.<br>Tekan satu kali.");
- }else if(st==="locked"){
-  $("buzz").disabled=false;$("buzz").textContent="TEKAN";
-  notice(Number(last.winner)===Number(myNumber)?"🏆 ANDA MENANG! Jangan tekan lagi.":"🔴 SOAL TERKUNCI. Peserta "+last.winner+" menekan lebih dahulu.");
- }else{
-  $("buzz").disabled=false;$("buzz").textContent="TEKAN";
-  notice("⏳ BELUM AKTIF.<br>Menekan sekarang akan dihitung sebagai pelanggaran.",true);
- }
+ if(!valid)return;last=s||{};const st=last.status||"waiting";$("status").className="status "+st;$("status").textContent=st==="armed"?"🟢 BELL AKTIF":st==="locked"?"🔴 SOAL TERKUNCI":"⏳ MENUNGGU JURI";
+ const p=last.players?.[token]||{};const banned=!!p.banned;$("buzz").className=banned?"banned":"";
+ if(banned){$("buzz").disabled=true;$("buzz").textContent="🚫 BANNED";notice("🚫 ANDA DIBLOKIR UNTUK SOAL INI.<br>3× pelanggaran. Tunggu juri melakukan RESET SOAL.",true)}
+ else if(st==="armed"){ $("buzz").disabled=false;$("buzz").textContent="TEKAN";notice("🟢 BELL AKTIF.<br>Tekan satu kali.")}
+ else if(st==="locked"){ $("buzz").disabled=false;$("buzz").textContent="TEKAN";notice(Number(last.winner)===Number(myNumber)?"🏆 ANDA MENANG! Jangan tekan lagi.":"🔴 SOAL TERKUNCI. Peserta "+last.winner+" menekan lebih dahulu.");}
+ else{$("buzz").disabled=false;$("buzz").textContent="TEKAN";notice("⏳ BELUM AKTIF.<br>Menekan sekarang akan dihitung sebagai pelanggaran.",true)}
  $("winner").textContent=last.winner?"🏆 PESERTA "+last.winner+" MENANG":"";
- if(last.winner&&last.winner!==lastWinner){lastWinner=last.winner;unlock();play("bellSound")}
- if(!last.winner)lastWinner=null;
- const key=(last.roundId||"")+"|"+(last.timerStartAt||"")+"|"+(last.timerDuration||0);
- if(key!==lastTimerKey){lastTimerKey=key;startTimer(last)}
+ const key=(last.roundId||"")+"|"+(last.timerStartAt||"")+"|"+(last.timerDuration||0);if(key!==lastTimerKey){lastTimerKey=key;startTimer(last)}
 }
-function startTimer(s){
- clearInterval(timerLoop);$("timer").textContent="";
- if(!s.timerStartAt||!s.timerDuration||!s.winner)return;
- const start=Number(s.timerStartAt),end=start+Number(s.timerDuration)*1000;
- let prev=-1,finished=false;
- const tick=()=>{
-  const t=now();
-  if(t<start){$("timer").textContent="⏳";return}
-  const left=Math.ceil((end-t)/1000);
-  if(left>0){
-   $("timer").textContent=left;
-   if(left!==prev){prev=left;play("countSound")}
-  }else{
-   $("timer").textContent="0";
-   if(!finished){finished=true;play("timesUpSound")}
-   clearInterval(timerLoop);
-  }
- };
- tick();timerLoop=setInterval(tick,100);
-}
-async function violation(reason){
- if(violationBusy||!valid)return;
- violationBusy=true;
+function startTimer(s){clearInterval(timerLoop);$("timer").textContent="";if(!s.timerStartAt||!s.timerDuration||!s.winner)return;const end=Number(s.timerStartAt)+Number(s.timerDuration)*1000;let prev=-1;const tick=()=>{const left=Math.ceil((end-now())/1000);if(left>0){$("timer").textContent=left;if(left!==prev){prev=left;play("countSound")}}else{$("timer").textContent="0";if(prev!==0){prev=0;play("timesUpSound")}clearInterval(timerLoop)}};tick();timerLoop=setInterval(tick,100)}
+async function violation(expectedStatus){
+ if(violationBusy)return;violationBusy=true;unlock();play("warningSound");
  try{
-  const ref=room.child("players").child(token);
-  const r=await ref.transaction(p=>{
-   if(!p)return;
-   if(p.banned===true)return;
-   const count=Number(p.violationCount||0)+1;
-   const banned=count>=3;
-   return {...p,violationCount:count,banned,banRoundId:last?.roundId||null};
-  });
-  if(r.committed){
-   const p=r.snapshot.val()||{};
-   const count=Number(p.violationCount||0);
-   const banned=p.banned===true;
-   await viol.push({
-    token,
-    number:myNumber,
-    type:reason==="waiting"?"EARLY_PRESS":"LOCKED_PRESS",
-    reason,
-    count,
-    banned,
-    roundId:last?.roundId||null,
-    timestamp:firebase.database.ServerValue.TIMESTAMP
+   const result=await room.transaction(current=>{
+     if(!current?.players?.[token])return;
+     const p=current.players[token];if(p.banned)return;
+     if(current.status==="armed" && current.winner==null)return;
+     const count=(Number(p.violationCount)||0)+1,banned=count>=3;
+     return {...current,players:{...current.players,[token]:{...p,violationCount:count,banned}}};
    });
-   unlock();
-   if(banned){
-    play("timesUpSound");
-    $("buzz").disabled=true;$("buzz").className="banned";$("buzz").textContent="🚫 BANNED";
-    notice("🚫 ANDA DIBLOKIR.<br>3× pelanggaran pada soal ini.<br>Tunggu juri melakukan RESET SOAL.",true);
-    $("message").textContent="🚨 Pelanggaran ke-3. Anda BANNED.";
-   }else{
-    play("warningSound");
-    notice("⚠️ PELANGGARAN #"+count+"<br>Jangan spam tombol. Pelanggaran ke-3 akan memblokir Anda.",true);
-    $("message").textContent="⚠️ Pelanggaran dicatat.";
+   if(result.committed){
+     const p=result.snapshot.val().players[token],count=p.violationCount,banned=!!p.banned;
+     await room.child("violations").push({number:myNumber,token,type:expectedStatus==="waiting"?"EARLY_PRESS":"LOCKED_PRESS",count,banned,roundId:result.snapshot.val().roundId||null,time:firebase.database.ServerValue.TIMESTAMP});
+     if(banned){play("timesUpSound");notice("🚫 BANNED!<br>3× pelanggaran pada soal ini. Tunggu RESET SOAL.",true);$("buzz").disabled=true}
+     else notice("⚠️ PELANGGARAN #"+count+" tercatat.<br>Jangan menekan lagi.",true);
    }
-  }
- }catch(e){$("message").textContent="❌ Gagal mencatat pelanggaran: "+e.message}
- finally{violationBusy=false}
+ }catch(e){$("message").textContent="Gagal mencatat pelanggaran: "+e.message}
+ violationBusy=false;
 }
 $("buzz").onclick=async()=>{
- if(!valid||!last)return;
- unlock();
- const st=last.status||"waiting";
- const p=last.players?.[token]||{};
- if(p.banned===true)return;
+ if(!valid||!last)return;unlock();
+ const st=last.status||"waiting";const p=last.players?.[token]||{};if(p.banned)return;
  if(st!=="armed"||last.winner!=null){await violation(st);return}
  const clickedRound=last.roundId;
  $("buzz").disabled=true;$("message").textContent="⏳ Memproses...";
  try{
   const r=await room.transaction(current=>{
-   const cp=current?.players?.[token];
-   if(!cp||cp.banned===true)return;
+   if(!current?.players?.[token])return;if(current.players[token].banned)return;
    if(current.status!=="armed"||current.winner!=null||current.roundId!==clickedRound)return;
-   return {...current,status:"locked",winner:myNumber,winnerTime:firebase.database.ServerValue.TIMESTAMP,timerStartAt:now()+5000};
+   return {...current,status:"locked",winner:myNumber,winnerTime:firebase.database.ServerValue.TIMESTAMP,timerStartAt:firebase.database.ServerValue.TIMESTAMP};
   });
-  if(!r.committed){
-   const c=r.snapshot.val()||{};
-   const cp=c.players?.[token]||{};
-   $("buzz").disabled=cp.banned===true;
-   if(cp.banned===true){
-    $("buzz").className="banned";$("buzz").textContent="🚫 BANNED";
-   }else if(c.status!=="armed"||c.winner!=null){
-    await violation(c.status||"locked");
-   }else{
-    $("message").textContent="Ronde berubah. Tekanan ditolak.";
-   }
-  }else{
-   $("message").textContent="🏆 ANDA MENANG!";
-  }
+  if(!r.committed){$("buzz").disabled=false;const c=r.snapshot.val()||{};if(c.status!=="armed"||c.winner!=null)await violation(c.status||"locked");else $("message").textContent="Ronde berubah. Tekanan ditolak."}
+  else{$("message").textContent="🏆 ANDA MENANG!"}
  }catch(e){$("buzz").disabled=false;$("message").textContent="❌ "+e.message}
 };
 async function validate(){
  if(!token){$("identity").textContent="❌ QR tidak valid";return}
- try{
-  const s=await room.child("players").child(token).get();
-  if(!s.exists()){$("identity").textContent="❌ QR tidak terdaftar";return}
-  myNumber=s.val().number;valid=true;
-  $("identity").innerHTML="<div class='number'>PESERTA "+myNumber+"</div>";
-  room.on("value",s=>render(s.val()));
- }catch(e){$("identity").textContent="❌ Gagal memeriksa QR: "+e.message}
+ const s=await room.child("players").child(token).get();if(!s.exists()){$("identity").textContent="❌ QR tidak terdaftar";return}
+ myNumber=s.val().number;valid=true;$("identity").innerHTML="<div class='number'>PESERTA "+myNumber+"</div>";room.on("value",s=>render(s.val()))
 }
 validate();
 </script>
